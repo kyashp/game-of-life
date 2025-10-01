@@ -1,0 +1,68 @@
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function Navbar() {
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 p-4">
+
+
+      {/* Logo - Top Left */}
+      <div className="absolute top-4 left-4">
+        <Image 
+          src="/GOL_Logo.png" 
+          alt="Game of Life Logo" 
+          width={200} 
+          height={40}
+          className="object-contain"
+        />
+      </div>
+
+
+
+
+
+      {/* Small Navbar - Top Right */}
+      <div className="absolute top-4 right-8 "> {/* right padding */}
+        <nav className="bg-[#8b93ff] text-white shadow-lg rounded-full px-8 py-4"> {/* navbar div */}
+          <div className="flex space-x-10"> {/* increased space between links */}
+            <Link 
+              href="/Landing_Page" 
+              className="hover:text-black transition-colors duration-200 text-lg"
+            >
+              Login / Sign up
+            </Link>
+            <Link 
+              href="/Profile_Page" 
+              className="hover:text-black transition-colors duration-200 text-lg"
+            >
+              Profile
+            </Link>
+            <Link 
+              href="/Life_Sim_Page" 
+              className="hover:text-black transition-colors duration-200 text-lg"
+            >
+              Life Sim 
+            </Link>
+            <Link 
+              href="/Insights_Page" 
+              className="hover:text-black transition-colors duration-200 text-lg"
+            >
+              Insights
+            </Link>
+            <Link 
+              href="/Help_Page" 
+              className="hover:text-black transition-colors duration-200 text-lg"
+            >
+              Help
+            </Link>
+
+          </div>
+        </nav>
+      </div>
+
+
+
+
+    </div>
+  );
+}
