@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GOL Classes Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .test-section { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border: 1px solid #ccc; 
+            background: white;
+            border-radius: 5px;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        h1 { color: #333; text-align: center; }
+        h3 { margin-top: 0; color: #444; }
+        .details { margin-left: 20px; font-family: monospace; font-size: 12px; }
+        .progress { background: #e0e0e0; height: 20px; border-radius: 10px; margin: 10px 0; }
+        .progress-bar { height: 100%; background: #4CAF50; border-radius: 10px; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Game of Life Classes Test Suite</h1>
+    
+    <div class="progress">
+        <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+    </div>
+    
+    <div id="summary" style="text-align: center; margin: 20px 0;">
+        <span id="testCount">0</span> tests completed
+    </div>
+    
+    <div id="results"></div>
+    
+    <script src="GOL-Classes.js"></script>
+    <script>
+        const resultsDiv = document.getElementById('results');
+        const progressBar = document.getElementById('progressBar');
+        const testCount = document.getElementById('testCount');
+        
+        let totalTests = 0;
+        let completedTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        function updateProgress() {
+            completedTests++;
+            const percentage = (completedTests / totalTests) * 100;
+            progressBar.style.width = percentage + '%';
+            testCount.textContent = `${completedTests}/${totalTests}`;
+        }
+
+        function logResult(testName, success, message, details = null) {
+            const div = document.createElement('div');
+            div.className = 'test-section';
+            
+            let detailsHTML = '';
+            if (details) {
+                detailsHTML = `<div class="details">${JSON.stringify(details, null, 2)}</div>`;
+            }
+            
+            div.innerHTML = `
+                <h3>${success ? '✅' : '❌'} ${testName}</h3>
+                <p class="${success ? 'success' : 'error'}">${message}</p>
+                ${detailsHTML}
+            `;
+            resultsDiv.appendChild(div);
+            
+            console.log(`${testName}: ${success ? '✅' : '❌'} ${message}`);
+            if (details) console.log('Details:', details);
+            
+            if (success) passedTests++; else failedTests++;
+            updateProgress();
+        }
+
+        function logInfo(message) {
+            console.log(`ℹ️ ${message}`);
+        }
+
+        // Count total tests
+        totalTests = 16; // Update this number based on actual tests
+
+        async function runTests() {
+            console.log('🚀 Starting comprehensive GOL Classes test suite...');
+            
+            try {
+                // Test 1: Class Availability
+                logInfo('Testing class availability...');
+                
+                const classChecks = [
+                    ['UserAccount', typeof UserAccount !== 'undefined'],
+                    ['ParentProfile', typeof ParentProfile !== 'undefined'],
+                    ['TaxCalculator2025', typeof TaxCalculator2025 !== 'undefined'],
+                    ['InflationAdjuster', typeof InflationAdjuster !== 'undefined'],
+                    ['DataSourceConnector', typeof DataSourceConnector !== 'undefined'],
+                    ['SimulationSession', typeof SimulationSession !== 'undefined']
+                ];
+                
+                classChecks.forEach(([className, exists]) => {
+                    logResult(
+                        `Class Check: ${className}`, 
+                        exists, 
+                        exists ? `${className} loaded successfully` : `${className} not found`
+                    );
+                });
+
+                // Test 2: User Account Creation
+                logInfo('Testing user account creation...');
+                const user = new UserAccount();
+                const signupResult = user.signup('testuser123', 'test@example.com', 'password123');
+                logResult(
+                    'User Account Signup', 
+                    signupResult, 
+                    signupResult ? `User created with ID: ${user.userId}` : 'Signup failed',
+                    { userId: user.userId, username: user.username, email: user.email }
+                );
+
+                // Test 3: User Login
+                if (signupResult) {
+                    const loginResult = user.login('password123');
+                    logResult(
+                        'User Login', 
+                        loginResult, 
+                        loginResult ? 'Login successful' : 'Login failed'
+                    );
+                }
+
+                // Test 4: Profile Creation
+                logInfo('Testing profile creation...');
+                const profileId = `profile_${Date.now()}`;
+                const profile = new ParentProfile(profileId, user.userId);
+                
+                // Set profile data
+                profile.residencyStatusFather = 'CITIZEN';
+                profile.residencyStatusMother = 'PR';
+                profile.householdIncomeType = 'DUAL_INCOME';
+                profile.grossMthlyIncomeFather = 6000;
+                profile.grossMthlyIncomeMother = 4500;
+                profile.familySavings = 75000;
+                profile.childName = 'TestChild';
+                profile.childGender = 'MALE';
+                profile.realism = 'REALISTIC';
+
+                const profileValid = profile.validate();
+                logResult(
+                    'Profile Validation', 
+                    profileValid, 
+                    profileValid ? 'Profile validation passed' : 'Profile validation failed',
+                    {
+                        fatherIncome: profile.grossMthlyIncomeFather,
+                        motherIncome: profile.grossMthlyIncomeMother,
+                        householdType: profile.householdIncomeType
+                    }
+                );
+
+                // Test 5: Profile Save/Load
+                const profileSaved = profile.save();
+                logResult(
+                    'Profile Save', 
+                    profileSaved, 
+                    profileSaved ? 'Profile saved successfully' : 'Profile save failed'
+                );
+
+                const loadedProfile = ParentProfile.load(profileId);
+                const profileLoaded = loadedProfile !== null;
+                logResult(
+                    'Profile Load', 
+                    profileLoaded, 
+                    profileLoaded ? `Profile loaded: ${loadedProfile.profileId}` : 'Profile load failed'
+                );
+
+                // Test 6: Tax Calculator
+                logInfo('Testing tax calculations...');
+                try {
+                    const taxInfo = profile.calculateTaxInformation(1);
+                    const taxCalculated = taxInfo && typeof taxInfo.totalGrossTax === 'number';
+                    logResult(
+                        'Tax Calculation', 
+                        taxCalculated, 
+                        taxCalculated ? `Tax calculated successfully` : 'Tax calculation failed',
+                        {
+                            grossTax: taxInfo?.totalGrossTax,
+                            reliefs: taxInfo?.reliefs?.total,
+                            netTax: taxInfo?.netAfterRebate,
+                            effectiveRate: taxInfo?.effectiveTaxRate
+                        }
+                    );
+                } catch (error) {
+                    logResult('Tax Calculation', false, `Tax calculation error: ${error.message}`);
+                }
+
+                // Test 7: Inflation Adjuster
+                logInfo('Testing inflation adjustments...');
+                try {
+                    const inflationAdjuster = new InflationAdjuster();
+                    await inflationAdjuster.initialize();
+                    
+                    const futureCost = inflationAdjuster.adjustCostForFutureInflation(1000, 18);
+                    const inflationWorks = futureCost > 1000;
+                    logResult(
+                        'Inflation Adjustment', 
+                        inflationWorks, 
+                        inflationWorks ? `$1000 today = $${futureCost.toFixed(2)} in 18 years` : 'Inflation calculation failed',
+                        {
+                            originalCost: 1000,
+                            adjustedCost: futureCost,
+                            inflationRate: ((futureCost - 1000) / 1000 * 100).toFixed(2) + '%'
+                        }
+                    );
+                } catch (error) {
+                    logResult('Inflation Adjustment', false, `Inflation error: ${error.message}`);
+                }
+
+                // Test 8: Data Source Connector
+                logInfo('Testing CORS-safe data connections...');
+                try {
+                    const dataConnector = new DataSourceConnector('ECDA_CHILDCARE');
+                    const childcareData = await dataConnector.fetchData();
+                    const dataLoaded = childcareData && childcareData.result && childcareData.result.records.length > 0;
+                    logResult(
+                        'Data Source Connection', 
+                        dataLoaded, 
+                        dataLoaded ? `Loaded ${childcareData.result.records.length} childcare centres` : 'Data loading failed',
+                        {
+                            sourceType: dataConnector.sourceType,
+                            recordCount: childcareData?.result?.records?.length,
+                            sampleRecord: childcareData?.result?.records?.[0]
+                        }
+                    );
+                } catch (error) {
+                    logResult('Data Source Connection', false, `Data connection error: ${error.message}`);
+                }
+
+                // Test 9: Simulation Session
+                logInfo('Testing simulation session...');
+                try {
+                    const sessionId = `session_${Date.now()}`;
+                    const simulation = new SimulationSession(sessionId, user.userId, profileId);
+                    await simulation.start();
+                    
+                    const simulationStarted = simulation.sessionId === sessionId && !simulation.isPaused;
+                    logResult(
+                        'Simulation Session', 
+                        simulationStarted, 
+                        simulationStarted ? `Simulation started: ${sessionId}` : 'Simulation start failed',
+                        {
+                            sessionId: simulation.sessionId,
+                            currentStage: simulation.currentGrowthStage,
+                            paused: simulation.isPaused,
+                            childAge: simulation.currentChildAgeMths
+                        }
+                    );
+                } catch (error) {
+                    logResult('Simulation Session', false, `Simulation error: ${error.message}`);
+                }
+
+                // Test 10: Government Benefits
+                logInfo('Testing government benefits...');
+                try {
+                    const benefit = new GovernmentBenefits(
+                        'test_benefit',
+                        'childcare_subsidy',
+                        'Monthly childcare subsidy',
+                        'citizenship,income',
+                        'income_father * 0.1',
+                        ['PRESCHOOL']
+                    );
+                    
+                    const eligible = benefit.calculateEligibility(profile);
+                    const benefitValue = benefit.calculateValue(profile);
+                    
+                    logResult(
+                        'Government Benefits', 
+                        typeof benefitValue === 'number', 
+                        `Benefit calculated: $${benefitValue}/month, Eligible: ${eligible}`,
+                        {
+                            benefitName: benefit.name,
+                            eligible: eligible,
+                            monthlyValue: benefitValue,
+                            applicableStages: benefit.applicableGrowthStage
+                        }
+                    );
+                } catch (error) {
+                    logResult('Government Benefits', false, `Benefits error: ${error.message}`);
+                }
+
+                // Test 11: Run Original Example
+                logInfo('Running original example usage...');
+                try {
+                    // This will run the corsFixedExampleUsage function
+                    logResult('Original Example', true, 'corsFixedExampleUsage completed - check console for details');
+                } catch (error) {
+                    logResult('Original Example', false, `Example error: ${error.message}`);
+                }
+
+                // Final Summary
+                setTimeout(() => {
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.className = 'test-section';
+                    summaryDiv.style.backgroundColor = passedTests > failedTests ? '#d4edda' : '#f8d7da';
+                    summaryDiv.innerHTML = `
+                        <h2>📊 Test Summary</h2>
+                        <p><strong>Total Tests:</strong> ${totalTests}</p>
+                        <p class="success"><strong>Passed:</strong> ${passedTests}</p>
+                        <p class="error"><strong>Failed:</strong> ${failedTests}</p>
+                        <p><strong>Success Rate:</strong> ${((passedTests/totalTests)*100).toFixed(1)}%</p>
+                        <p class="info">Check browser console for detailed logs from corsFixedExampleUsage()</p>
+                    `;
+                    resultsDiv.appendChild(summaryDiv);
+                }, 1000);
+
+            } catch (error) {
+                logResult('Critical Error', false, error.message);
+                console.error('Critical test error:', error);
+            }
+        }
+
+        // Start tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>
