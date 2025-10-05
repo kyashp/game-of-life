@@ -81,7 +81,7 @@
         }
 
         // Count total tests
-        totalTests = 16; // Update this number based on actual tests
+        totalTests = 17; // Update this number based on actual tests
 
         async function runTests() {
             console.log('🚀 Starting comprehensive GOL Classes test suite...');
@@ -109,13 +109,25 @@
 
                 // Test 2: User Account Creation
                 logInfo('Testing user account creation...');
-                const user = new UserAccount();
-                const signupResult = user.signup('testuser123', 'test@example.com', 'password123');
+                
+                // Create user with proper constructor parameters
+                const tempUserId = generateUniqueId('user');
+                const testUsername = 'testuser' + Date.now(); // Make username unique
+                const testEmail = `test${Date.now()}@example.com`; // Make email unique
+                
+                const user = new UserAccount(tempUserId, testUsername, testEmail);
+                
+                const signupResult = user.signup(testUsername, testEmail, 'password123');
                 logResult(
                     'User Account Signup', 
                     signupResult, 
                     signupResult ? `User created with ID: ${user.userId}` : 'Signup failed',
-                    { userId: user.userId, username: user.username, email: user.email }
+                    { 
+                        userId: user.userId, 
+                        username: user.username, 
+                        email: user.email,
+                        tempUserId: tempUserId
+                    }
                 );
 
                 // Test 3: User Login
@@ -126,12 +138,21 @@
                         loginResult, 
                         loginResult ? 'Login successful' : 'Login failed'
                     );
+                } else {
+                    logResult('User Login', false, 'Skipped - signup failed');
                 }
 
                 // Test 4: Profile Creation
                 logInfo('Testing profile creation...');
-                const profileId = `profile_${Date.now()}`;
-                const profile = new ParentProfile(profileId, user.userId);
+                const profileId = generateUniqueId('profile');
+                let profile;
+                
+                if (signupResult) {
+                    profile = new ParentProfile(profileId, user.userId);
+                } else {
+                    // Fallback if signup failed
+                    profile = new ParentProfile(profileId, tempUserId);
+                }
                 
                 // Set profile data
                 profile.residencyStatusFather = 'CITIZEN';

@@ -119,21 +119,29 @@ class UserAccount {
                 return false;
             }
 
+            // Generate userId first
+            const newUserId = this.generateUserId();
+
+            // Create Authentication with proper parameters
+            const auth = new Authentication(null, null, null);
+            
             const userData = {
-                userId: this.generateUserId(),
+                userId: newUserId,
                 username: username,
                 email: email,
-                password: new Authentication().hashPassword(password),
+                password: auth.hashPassword(password), // ✅ Fixed - use instance method
                 createdAt: new Date().toISOString(),
                 authProvider: this.authProvider
             };
 
             localStorage.setItem(`user_${username}`, JSON.stringify(userData));
 
-            this.userId = userData.userId;
+            // Update instance properties after successful save
+            this.userId = newUserId;
             this.username = username;
             this.email = email;
 
+            console.log('User signup successful:', { userId: newUserId, username, email });
             return true;
         } catch (error) {
             console.error('Error during signup:', error);
@@ -147,13 +155,26 @@ class UserAccount {
      * @returns {boolean} - returns true if login is successful and token is generated, false otherwise
      */
     login(password) {
-        const auth = new Authentication();
-        if (auth.verifyCredentials(this.username, password)) {
-            const token = auth.generateToken(this.userId);
-            localStorage.setItem(`auth_token_${this.userId}`, token);
-            return true;
+        try {
+            if (!this.username) {
+                console.error('No username set for login');
+                return false;
+            }
+
+            // Create Authentication with proper parameters
+            const auth = new Authentication(null, null, null);
+            if (auth.verifyCredentials(this.username, password)) {
+                const token = auth.generateToken(this.userId);
+                localStorage.setItem(`auth_token_${this.userId}`, token);
+                console.log('Login successful for user:', this.username);
+                return true;
+            }
+            console.error('Invalid credentials');
+            return false;
+        } catch (error) {
+            console.error('Error during login:', error);
+            return false;
         }
-        return false;
     }
 
     /**
@@ -1819,61 +1840,78 @@ function validateEnum(value, validValues) {
 async function corsFixedExampleUsage() {
     console.log('=== CORS-Fixed Game of Life Classes Example ===');
 
-    // 1. User Registration
-    const userAccount = new UserAccount();
-    const signupSuccess = userAccount.signup('jane_doe', 'jane@example.com', 'password123');
-    console.log('Signup successful:', signupSuccess);
+    try {
+        // 1. User Registration - FIXED
+        const tempUserId = generateUniqueId('user');
+        const uniqueUsername = `jane_doe_${Date.now()}`;
+        const uniqueEmail = `jane${Date.now()}@example.com`;
+        
+        const userAccount = new UserAccount(tempUserId, uniqueUsername, uniqueEmail);
+        const signupSuccess = userAccount.signup(uniqueUsername, uniqueEmail, 'password123');
+        console.log('Signup successful:', signupSuccess);
 
-    // 2. Create Parent Profile
-    const profileId = generateUniqueId('profile');
-    const parentProfile = new ParentProfile(profileId, userAccount.userId);
-    parentProfile.residencyStatusFather = 'CITIZEN';
-    parentProfile.residencyStatusMother = 'PR';
-    parentProfile.householdIncomeType = 'DUAL_INCOME';
-    parentProfile.grossMthlyIncomeFather = 6000;
-    parentProfile.grossMthlyIncomeMother = 4500;
-    parentProfile.familySavings = 75000;
-    parentProfile.childName = 'Alex';
-    parentProfile.childGender = 'MALE';
-    parentProfile.realism = 'REALISTIC';
+        if (!signupSuccess) {
+            console.error('Signup failed, stopping example');
+            return;
+        }
 
-    const profileSaved = parentProfile.save();
-    console.log('Profile saved:', profileSaved);
+        // 2. Test login
+        const loginSuccess = userAccount.login('password123');
+        console.log('Login successful:', loginSuccess);
 
-    // 3. Calculate Tax Information (works without CORS issues)
-    const taxInfo = parentProfile.calculateTaxInformation(1);
-    console.log('Tax Information:');
-    console.log(`  Total Gross Tax: ${formatCurrency(taxInfo.totalGrossTax)}`);
-    console.log(`  Total Tax Reliefs: ${formatCurrency(taxInfo.reliefs.total)}`);
-    console.log(`  Net Tax Payable: ${formatCurrency(taxInfo.netTaxPayable)}`);
-    console.log(`  Effective Tax Rate: ${taxInfo.effectiveTaxRate.toFixed(2)}%`);
+        // 3. Create Parent Profile (rest unchanged)
+        const profileId = generateUniqueId('profile');
+        const parentProfile = new ParentProfile(profileId, userAccount.userId);
+        parentProfile.residencyStatusFather = 'CITIZEN';
+        parentProfile.residencyStatusMother = 'PR';
+        parentProfile.householdIncomeType = 'DUAL_INCOME';
+        parentProfile.grossMthlyIncomeFather = 6000;
+        parentProfile.grossMthlyIncomeMother = 4500;
+        parentProfile.familySavings = 75000;
+        parentProfile.childName = 'Alex';
+        parentProfile.childGender = 'MALE';
+        parentProfile.realism = 'REALISTIC';
 
-    // 4. Test Inflation Adjustment (CORS-safe)
-    const futureCost = parentProfile.inflationAdjuster.adjustCostForFutureInflation(1000, 18);
-    console.log(`Inflation Test: $1000 today = ${formatCurrency(futureCost)} in 18 years`);
+        const profileSaved = parentProfile.save();
+        console.log('Profile saved:', profileSaved);
 
-    // 5. Test Static Data Integration (no CORS issues)
-    const dataConnector = new DataSourceConnector('ECDA_CHILDCARE');
-    const childcareData = await dataConnector.fetchData();
-    console.log(`Childcare Data: ${childcareData.result.records.length} centres loaded (CORS-safe)`);
+        // 4. Calculate Tax Information (works without CORS issues)
+        const taxInfo = parentProfile.calculateTaxInformation(1);
+        console.log('Tax Information:');
+        console.log(`  Total Gross Tax: ${formatCurrency(taxInfo.totalGrossTax)}`);
+        console.log(`  Total Tax Reliefs: ${formatCurrency(taxInfo.reliefs.total)}`);
+        console.log(`  Net Tax Payable: ${formatCurrency(taxInfo.netTaxPayable)}`);
+        console.log(`  Effective Tax Rate: ${taxInfo.effectiveTaxRate.toFixed(2)}%`);
 
-    // 6. Start CORS-Safe Simulation
-    const sessionId = generateUniqueId('session');
-    const simulation = new SimulationSession(sessionId, userAccount.userId, profileId);
-    await simulation.start();
-    console.log('CORS-safe simulation started successfully');
+        // 5. Test Inflation Adjustment (CORS-safe)
+        const futureCost = parentProfile.inflationAdjuster.adjustCostForFutureInflation(1000, 18);
+        console.log(`Inflation Test: $1000 today = ${formatCurrency(futureCost)} in 18 years`);
 
-    // 7. Generate Inflation-Adjusted Insights (CORS-safe)
-    const insightsId = generateUniqueId('insights');
-    const insights = new InsightsRequest(insightsId, profileId, 2, 'JC_UNIVERSITY');
-    const projections = await insights.calculateProjections();
-    console.log('Inflation-Adjusted Projections (CORS-safe):');
-    projections.forEach((range, scenario) => {
-        console.log(`  ${scenario}: ${formatCurrency(range.min)} - ${formatCurrency(range.max)}`);
-    });
+        // 6. Test Static Data Integration (no CORS issues)
+        const dataConnector = new DataSourceConnector('ECDA_CHILDCARE');
+        const childcareData = await dataConnector.fetchData();
+        console.log(`Childcare Data: ${childcareData.result.records.length} centres loaded (CORS-safe)`);
 
-    console.log('=== CORS-fixed example completed successfully ===');
-    console.log('✅ All functionality works in browsers without CORS issues!');
+        // 7. Start CORS-Safe Simulation
+        const sessionId = generateUniqueId('session');
+        const simulation = new SimulationSession(sessionId, userAccount.userId, profileId);
+        await simulation.start();
+        console.log('CORS-safe simulation started successfully');
+
+        // 8. Generate Inflation-Adjusted Insights (CORS-safe)
+        const insightsId = generateUniqueId('insights');
+        const insights = new InsightsRequest(insightsId, profileId, 2, 'JC_UNIVERSITY');
+        const projections = await insights.calculateProjections();
+        console.log('Inflation-Adjusted Projections (CORS-safe):');
+        projections.forEach((range, scenario) => {
+            console.log(`  ${scenario}: ${formatCurrency(range.min)} - ${formatCurrency(range.max)}`);
+        });
+
+        console.log('=== CORS-fixed example completed successfully ===');
+        console.log('✅ All functionality works in browsers without CORS issues!');
+    } catch (error) {
+        console.error('Example failed:', error);
+    }
 }
 
 // Export classes for use in modules
