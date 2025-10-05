@@ -1037,7 +1037,7 @@ class ParentProfile {
         this.realism = null;     // Enum: 'BASIC', 'REALISTIC', 'PREMIUM'
 
         // Initialize calculators (now CORS-safe)
-        this.taxCalculator = new TaxCalculator();
+        this.taxCalculator2025 = new TaxCalculator2025();
         this.inflationAdjuster = new InflationAdjuster();
     }
 
@@ -1047,7 +1047,7 @@ class ParentProfile {
      * @returns {Object} - Complete tax calculation results
      */
     calculateTaxInformation(childOrderNumber = 1) {
-        return this.taxCalculator.calculateNetTaxPayable(this, childOrderNumber);
+        return this.taxCalculator2025.calculateNetTaxPayable(this, childOrderNumber);
     }
 
     /**
@@ -1142,7 +1142,7 @@ class ParentProfile {
                 Object.assign(profile, data);
 
                 // Reinitialize calculators
-                profile.taxCalculator = new TaxCalculator();
+                profile.taxCalculator2025 = new TaxCalculator2025();
                 profile.inflationAdjuster = new InflationAdjuster();
 
                 return profile;
@@ -1890,7 +1890,7 @@ if (typeof module !== 'undefined' && module.exports) {
         InsightsRequest, 
         DataSourceConnector, 
         InflationAdjuster, 
-        TaxCalculator,
+        TaxCalculator2025,
         generateUniqueId,
         formatCurrency,
         validateEnum,
