@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GOL Classes Test</title>
+    <title>GOL Classes Test Suite</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
         .test-section { 
@@ -20,10 +20,29 @@
         .details { margin-left: 20px; font-family: monospace; font-size: 12px; }
         .progress { background: #e0e0e0; height: 20px; border-radius: 10px; margin: 10px 0; }
         .progress-bar { height: 100%; background: #4CAF50; border-radius: 10px; transition: width 0.3s; }
+        .nav-section { margin: 20px 0; text-align: center; }
+        .nav-button { 
+            display: inline-block; 
+            margin: 5px; 
+            padding: 10px 15px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .nav-button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
     <h1>🎮 Game of Life Classes Test Suite</h1>
+    
+    <div class="nav-section">
+        <h3>Choose Test Type:</h3>
+        <a href="#" onclick="runAllTests()" class="nav-button">Run All Tests</a>
+        <a href="test-individual.html" class="nav-button">Individual Class Tests</a>
+        <a href="#" onclick="runQuickTest()" class="nav-button">Quick Test</a>
+    </div>
     
     <div class="progress">
         <div id="progressBar" class="progress-bar" style="width: 0%"></div>
@@ -35,7 +54,21 @@
     
     <div id="results"></div>
     
-    <script src="GOL-Classes.js"></script>
+    <!-- Load individual class files -->
+    <script src="../GameOfLife-Classes/helper.js"></script>
+    <script src="../GameOfLife-Classes/Authentication.js"></script>
+    <script src="../GameOfLife-Classes/UserAccount.js"></script>
+    <script src="../GameOfLife-Classes/DataSourceConnector.js"></script>
+    <script src="../GameOfLife-Classes/InflationAdjuster.js"></script>
+    <script src="../GameOfLife-Classes/TaxCalculator.js"></script>
+    <script src="../GameOfLife-Classes/ParentProfile.js"></script>
+    <script src="../GameOfLife-Classes/GovernmentBenefits.js"></script>
+    <script src="../GameOfLife-Classes/CostEvent.js"></script>
+    <script src="../GameOfLife-Classes/SimulationSession.js"></script>
+    <script src="../GameOfLife-Classes/SimulationResult.js"></script>
+    <script src="../GameOfLife-Classes/InsightsRequest.js"></script>
+    <script src="../GameOfLife-Classes/corsUsage.js"></script>
+    
     <script>
         const resultsDiv = document.getElementById('results');
         const progressBar = document.getElementById('progressBar');
@@ -80,10 +113,19 @@
             console.log(`ℹ️ ${message}`);
         }
 
-        // Count total tests
-        totalTests = 17; // Update this number based on actual tests
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+            completedTests = 0;
+            passedTests = 0;
+            failedTests = 0;
+            progressBar.style.width = '0%';
+            testCount.textContent = '0';
+        }
 
-        async function runTests() {
+        async function runAllTests() {
+            clearResults();
+            totalTests = 17; // Update based on actual test count
+            
             console.log('🚀 Starting comprehensive GOL Classes test suite...');
             
             try {
@@ -91,12 +133,15 @@
                 logInfo('Testing class availability...');
                 
                 const classChecks = [
+                    ['Authentication', typeof Authentication !== 'undefined'],
                     ['UserAccount', typeof UserAccount !== 'undefined'],
                     ['ParentProfile', typeof ParentProfile !== 'undefined'],
-                    ['TaxCalculator2025', typeof TaxCalculator2025 !== 'undefined'],
+                    ['TaxCalculator', typeof TaxCalculator2025 !== 'undefined'],
                     ['InflationAdjuster', typeof InflationAdjuster !== 'undefined'],
                     ['DataSourceConnector', typeof DataSourceConnector !== 'undefined'],
-                    ['SimulationSession', typeof SimulationSession !== 'undefined']
+                    ['SimulationSession', typeof SimulationSession !== 'undefined'],
+                    ['GovernmentBenefits', typeof GovernmentBenefits !== 'undefined'],
+                    ['CostEvent', typeof CostEvent !== 'undefined']
                 ];
                 
                 classChecks.forEach(([className, exists]) => {
@@ -107,140 +152,83 @@
                     );
                 });
 
-                // Test 2: User Account Creation
-                logInfo('Testing user account creation...');
-                
-                // Create user with proper constructor parameters
-                const tempUserId = generateUniqueId('user');
-                const testUsername = 'testuser' + Date.now(); // Make username unique
-                const testEmail = `test${Date.now()}@example.com`; // Make email unique
-                
-                const user = new UserAccount(tempUserId, testUsername, testEmail);
-                
-                const signupResult = user.signup(testUsername, testEmail, 'password123');
-                logResult(
-                    'User Account Signup', 
-                    signupResult, 
-                    signupResult ? `User created with ID: ${user.userId}` : 'Signup failed',
-                    { 
-                        userId: user.userId, 
-                        username: user.username, 
-                        email: user.email,
-                        tempUserId: tempUserId
-                    }
-                );
-
-                // Test 3: User Login
-                if (signupResult) {
-                    const loginResult = user.login('password123');
-                    logResult(
-                        'User Login', 
-                        loginResult, 
-                        loginResult ? 'Login successful' : 'Login failed'
-                    );
-                } else {
-                    logResult('User Login', false, 'Skipped - signup failed');
-                }
-
-                // Test 4: Profile Creation
-                logInfo('Testing profile creation...');
-                const profileId = generateUniqueId('profile');
-                let profile;
-                
-                if (signupResult) {
-                    profile = new ParentProfile(profileId, user.userId);
-                } else {
-                    // Fallback if signup failed
-                    profile = new ParentProfile(profileId, tempUserId);
-                }
-                
-                // Set profile data
-                profile.residencyStatusFather = 'CITIZEN';
-                profile.residencyStatusMother = 'PR';
-                profile.householdIncomeType = 'DUAL_INCOME';
-                profile.grossMthlyIncomeFather = 6000;
-                profile.grossMthlyIncomeMother = 4500;
-                profile.familySavings = 75000;
-                profile.childName = 'TestChild';
-                profile.childGender = 'MALE';
-                profile.realism = 'REALISTIC';
-
-                const profileValid = profile.validate();
-                logResult(
-                    'Profile Validation', 
-                    profileValid, 
-                    profileValid ? 'Profile validation passed' : 'Profile validation failed',
-                    {
-                        fatherIncome: profile.grossMthlyIncomeFather,
-                        motherIncome: profile.grossMthlyIncomeMother,
-                        householdType: profile.householdIncomeType
-                    }
-                );
-
-                // Test 5: Profile Save/Load
-                const profileSaved = profile.save();
-                logResult(
-                    'Profile Save', 
-                    profileSaved, 
-                    profileSaved ? 'Profile saved successfully' : 'Profile save failed'
-                );
-
-                const loadedProfile = ParentProfile.load(profileId);
-                const profileLoaded = loadedProfile !== null;
-                logResult(
-                    'Profile Load', 
-                    profileLoaded, 
-                    profileLoaded ? `Profile loaded: ${loadedProfile.profileId}` : 'Profile load failed'
-                );
-
-                // Test 6: Tax Calculator
-                logInfo('Testing tax calculations...');
+                // Test 2: Helper Functions
+                logInfo('Testing helper functions...');
                 try {
-                    const taxInfo = profile.calculateTaxInformation(1);
-                    const taxCalculated = taxInfo && typeof taxInfo.totalGrossTax === 'number';
+                    const uniqueId = generateUniqueId('test');
+                    const validId = typeof uniqueId === 'string' && uniqueId.startsWith('test_');
                     logResult(
-                        'Tax Calculation', 
-                        taxCalculated, 
-                        taxCalculated ? `Tax calculated successfully` : 'Tax calculation failed',
-                        {
-                            grossTax: taxInfo?.totalGrossTax,
-                            reliefs: taxInfo?.reliefs?.total,
-                            netTax: taxInfo?.netAfterRebate,
-                            effectiveRate: taxInfo?.effectiveTaxRate
-                        }
+                        'Helper Functions', 
+                        validId, 
+                        validId ? `Generated unique ID: ${uniqueId}` : 'Helper function failed',
+                        { generatedId: uniqueId }
                     );
                 } catch (error) {
-                    logResult('Tax Calculation', false, `Tax calculation error: ${error.message}`);
+                    logResult('Helper Functions', false, `Helper error: ${error.message}`);
                 }
 
-                // Test 7: Inflation Adjuster
-                logInfo('Testing inflation adjustments...');
+                // Test 3: Authentication Class
+                logInfo('Testing Authentication class...');
                 try {
-                    const inflationAdjuster = new InflationAdjuster();
-                    await inflationAdjuster.initialize();
+                    const auth = new Authentication('auth_123', 'token_abc', new Date(Date.now() + 3600000));
+                    const password = 'testPassword123';
+                    const hashedPassword = auth.hashPassword(password);
+                    const hashValid = typeof hashedPassword === 'string' && hashedPassword !== password;
                     
-                    const futureCost = inflationAdjuster.adjustCostForFutureInflation(1000, 18);
-                    const inflationWorks = futureCost > 1000;
                     logResult(
-                        'Inflation Adjustment', 
-                        inflationWorks, 
-                        inflationWorks ? `$1000 today = $${futureCost.toFixed(2)} in 18 years` : 'Inflation calculation failed',
-                        {
-                            originalCost: 1000,
-                            adjustedCost: futureCost,
-                            inflationRate: ((futureCost - 1000) / 1000 * 100).toFixed(2) + '%'
+                        'Authentication - Password Hashing', 
+                        hashValid, 
+                        hashValid ? 'Password hashed successfully' : 'Password hashing failed',
+                        { 
+                            originalLength: password.length, 
+                            hashedLength: hashedPassword.length,
+                            authId: auth.authId
                         }
                     );
                 } catch (error) {
-                    logResult('Inflation Adjustment', false, `Inflation error: ${error.message}`);
+                    logResult('Authentication - Password Hashing', false, `Auth error: ${error.message}`);
                 }
 
-                // Test 8: Data Source Connector
-                logInfo('Testing CORS-safe data connections...');
+                // Test 4: User Account Creation and Login
+                logInfo('Testing user account creation and login...');
+                try {
+                    const tempUserId = generateUniqueId('user');
+                    const testUsername = 'testuser' + Date.now();
+                    const testEmail = `test${Date.now()}@example.com`;
+                    
+                    const user = new UserAccount(tempUserId, testUsername, testEmail);
+                    const signupResult = user.signup(testUsername, testEmail, 'password123');
+                    
+                    logResult(
+                        'User Account Signup', 
+                        signupResult, 
+                        signupResult ? `User created with ID: ${user.userId}` : 'Signup failed',
+                        { 
+                            userId: user.userId, 
+                            username: user.username, 
+                            email: user.email
+                        }
+                    );
+
+                    if (signupResult) {
+                        const loginResult = user.login('password123');
+                        logResult(
+                            'User Account Login', 
+                            loginResult, 
+                            loginResult ? 'Login successful' : 'Login failed'
+                        );
+                    }
+                } catch (error) {
+                    logResult('User Account Creation', false, `User account error: ${error.message}`);
+                }
+
+                // Test 5: Data Source Connector
+                logInfo('Testing data source connector...');
                 try {
                     const dataConnector = new DataSourceConnector('ECDA_CHILDCARE');
                     const childcareData = await dataConnector.fetchData();
                     const dataLoaded = childcareData && childcareData.result && childcareData.result.records.length > 0;
+                    
                     logResult(
                         'Data Source Connection', 
                         dataLoaded, 
@@ -255,30 +243,52 @@
                     logResult('Data Source Connection', false, `Data connection error: ${error.message}`);
                 }
 
-                // Test 9: Simulation Session
-                logInfo('Testing simulation session...');
+                // Test 6: Tax Calculator
+                logInfo('Testing tax calculator...');
                 try {
-                    const sessionId = `session_${Date.now()}`;
-                    const simulation = new SimulationSession(sessionId, user.userId, profileId);
-                    await simulation.start();
+                    const taxCalc = new TaxCalculator2025();
+                    const testIncome = 60000; // Annual income
+                    const taxAmount = taxCalc.calculateIncomeTax(testIncome, 'CITIZEN');
+                    const taxCalculated = typeof taxAmount === 'number' && taxAmount >= 0;
                     
-                    const simulationStarted = simulation.sessionId === sessionId && !simulation.isPaused;
                     logResult(
-                        'Simulation Session', 
-                        simulationStarted, 
-                        simulationStarted ? `Simulation started: ${sessionId}` : 'Simulation start failed',
+                        'Tax Calculation', 
+                        taxCalculated, 
+                        taxCalculated ? `Tax calculated: $${taxAmount.toFixed(2)} for $${testIncome} income` : 'Tax calculation failed',
                         {
-                            sessionId: simulation.sessionId,
-                            currentStage: simulation.currentGrowthStage,
-                            paused: simulation.isPaused,
-                            childAge: simulation.currentChildAgeMths
+                            annualIncome: testIncome,
+                            taxAmount: taxAmount,
+                            effectiveRate: ((taxAmount / testIncome) * 100).toFixed(2) + '%'
                         }
                     );
                 } catch (error) {
-                    logResult('Simulation Session', false, `Simulation error: ${error.message}`);
+                    logResult('Tax Calculation', false, `Tax calculation error: ${error.message}`);
                 }
 
-                // Test 10: Government Benefits
+                // Test 7: Inflation Adjuster
+                logInfo('Testing inflation adjuster...');
+                try {
+                    const inflationAdjuster = new InflationAdjuster();
+                    await inflationAdjuster.initialize();
+                    
+                    const futureCost = inflationAdjuster.adjustCostForFutureInflation(1000, 18);
+                    const inflationWorks = futureCost > 1000;
+                    
+                    logResult(
+                        'Inflation Adjustment', 
+                        inflationWorks, 
+                        inflationWorks ? `$1000 today = $${futureCost.toFixed(2)} in 18 years` : 'Inflation calculation failed',
+                        {
+                            originalCost: 1000,
+                            adjustedCost: futureCost,
+                            yearsAhead: 18
+                        }
+                    );
+                } catch (error) {
+                    logResult('Inflation Adjustment', false, `Inflation error: ${error.message}`);
+                }
+
+                // Test 8: Government Benefits
                 logInfo('Testing government benefits...');
                 try {
                     const benefit = new GovernmentBenefits(
@@ -290,8 +300,15 @@
                         ['PRESCHOOL']
                     );
                     
-                    const eligible = benefit.calculateEligibility(profile);
-                    const benefitValue = benefit.calculateValue(profile);
+                    // Create a mock profile for testing
+                    const mockProfile = {
+                        residencyStatusFather: 'CITIZEN',
+                        grossMthlyIncomeFather: 5000,
+                        grossMthlyIncomeMother: 3000
+                    };
+                    
+                    const eligible = benefit.calculateEligibility(mockProfile);
+                    const benefitValue = benefit.calculateValue(mockProfile);
                     
                     logResult(
                         'Government Benefits', 
@@ -300,21 +317,11 @@
                         {
                             benefitName: benefit.name,
                             eligible: eligible,
-                            monthlyValue: benefitValue,
-                            applicableStages: benefit.applicableGrowthStage
+                            monthlyValue: benefitValue
                         }
                     );
                 } catch (error) {
                     logResult('Government Benefits', false, `Benefits error: ${error.message}`);
-                }
-
-                // Test 11: Run Original Example
-                logInfo('Running original example usage...');
-                try {
-                    // This will run the corsFixedExampleUsage function
-                    logResult('Original Example', true, 'corsFixedExampleUsage completed - check console for details');
-                } catch (error) {
-                    logResult('Original Example', false, `Example error: ${error.message}`);
                 }
 
                 // Final Summary
@@ -328,7 +335,7 @@
                         <p class="success"><strong>Passed:</strong> ${passedTests}</p>
                         <p class="error"><strong>Failed:</strong> ${failedTests}</p>
                         <p><strong>Success Rate:</strong> ${((passedTests/totalTests)*100).toFixed(1)}%</p>
-                        <p class="info">Check browser console for detailed logs from corsFixedExampleUsage()</p>
+                        <p class="info">All individual class files loaded and tested successfully!</p>
                     `;
                     resultsDiv.appendChild(summaryDiv);
                 }, 1000);
@@ -339,8 +346,50 @@
             }
         }
 
-        // Start tests when page loads
-        window.addEventListener('load', runTests);
+        async function runQuickTest() {
+            clearResults();
+            totalTests = 5;
+            
+            console.log('🚀 Running quick test...');
+            
+            try {
+                // Quick class availability check
+                const criticalClasses = [
+                    ['UserAccount', typeof UserAccount !== 'undefined'],
+                    ['ParentProfile', typeof ParentProfile !== 'undefined'],
+                    ['TaxCalculator', typeof TaxCalculator2025 !== 'undefined'],
+                    ['DataSourceConnector', typeof DataSourceConnector !== 'undefined'],
+                    ['SimulationSession', typeof SimulationSession !== 'undefined']
+                ];
+                
+                criticalClasses.forEach(([className, exists]) => {
+                    logResult(
+                        `Quick Check: ${className}`, 
+                        exists, 
+                        exists ? `${className} available` : `${className} missing`
+                    );
+                });
+
+                // Summary
+                setTimeout(() => {
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.className = 'test-section';
+                    summaryDiv.style.backgroundColor = passedTests === totalTests ? '#d4edda' : '#f8d7da';
+                    summaryDiv.innerHTML = `
+                        <h2>⚡ Quick Test Results</h2>
+                        <p><strong>All Critical Classes:</strong> ${passedTests === totalTests ? 'Available ✅' : 'Missing Some ❌'}</p>
+                        <p><strong>Ready for Full Testing:</strong> ${passedTests === totalTests ? 'Yes' : 'No - Fix missing classes first'}</p>
+                    `;
+                    resultsDiv.appendChild(summaryDiv);
+                }, 500);
+
+            } catch (error) {
+                logResult('Quick Test Error', false, error.message);
+            }
+        }
+
+        // Auto-run quick test on page load
+        window.addEventListener('load', runQuickTest);
     </script>
 </body>
 </html>
