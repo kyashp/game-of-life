@@ -69,7 +69,7 @@ const ControlButton = ({ children, style, icon, onClick }) => (
 
 export default function LifeSim() {
   const [status, setStatus] = useState('stopped'); // 'stopped', 'running', 'paused'
-  const [speed, setSpeed] = useState(0.5);
+  const [speed, setSpeed] = useState(1);
 
   const handleStart = () => {
     setStatus('running');
@@ -152,7 +152,7 @@ export default function LifeSim() {
         {/* Bottom Controls */}
         <div style={{ gridColumn: '1 / 2', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
             <span style={{ fontSize: '22px', color: '#2D3142', fontWeight: '500' }}>Speed</span>
-            <input type="range" min="0.1" max="2" step="0.1" value={speed} onChange={handleSpeedChange} style={{ width: '100%' }}/>
+            <input type="range" min="0.1" max="2" step="0.1" value={speed} onChange={handleSpeedChange} style={{ width: '100%' }} />
             <span style={{ fontSize: '20px', color: '#2D3142', width: '50px' }}>{speed}x</span>
         </div>
          <div style={{ gridColumn: '2 / 3', marginTop: '20px', display: 'flex', gap: '15px', justifyContent: 'flex-end', alignItems: 'center' }}>

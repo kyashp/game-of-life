@@ -10,22 +10,6 @@ export default function Navbar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 p-4">
 
-
-      {/* Logo - Top Left */}
-      <div className="absolute top-4 left-4">
-        <Image 
-          src="/GOL_Logo.png" 
-          alt="Game of Life Logo" 
-          width={200} 
-          height={40}
-          className="object-contain"
-        />
-      </div>
-
-
-
-
-
       {/* Small Navbar - Top Right */}
       <div className="absolute top-4 right-8 "> {/* right padding */}
         <nav className="bg-[#8b93ff] text-white shadow-lg rounded-full px-8 py-4"> {/* navbar div */}
