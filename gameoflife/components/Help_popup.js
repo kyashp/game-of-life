@@ -16,7 +16,9 @@ export default function Help_popup({ isOpen, onClose }) {
         {/* Scrollable content area */}
         <div className="overflow-y-auto p-8 max-h-[calc(80vh-4rem)] text-black">
           {/* Header */}
-          <h1 className="text-3xl font-bold mb-4">Help and Support</h1>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-[#2D3142]">Help and Support</h1>
+          </div>
           
           {/* Subheading and content */}
           <div className="space-y-6">
@@ -46,7 +48,7 @@ export default function Help_popup({ isOpen, onClose }) {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Disclaimer</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-orange-700">Disclaimer</h2>
               <p className="text-lg mb-4">
                 The "Game of Life" application is designed to assist Singaporean families in family planning and budgeting by visualizing the potential financial costs of raising a child.
               </p>
