@@ -117,120 +117,122 @@ export default function Profile() {
   };
 
   return (
-    <div className="profile-container">
-      <h2>Create your Profile</h2>
-      <form onSubmit={handleSubmit} className="form-grid-layout">
-        {/* Helper component for rendering group */}
-        <FormGroup
-          id="Father_Residency"
-          label="Father Residency"
-          type="select"
-          value={profileData.Father_Residency}
-          onChange={handleChange}
-          error={errors.Father_Residency}
-          options={['Singaporean', 'PR', 'Foreigner']}
-        />
-        <FormGroup
-          id="Mother_Residency"
-          label="Mother Residency"
-          type="select"
-          value={profileData.Mother_Residency}
-          onChange={handleChange}
-          error={errors.Mother_Residency}
-          options={['Singaporean', 'PR', 'Foreigner']}
-        />
-        <FormGroup
-          id="Household_Income_Type"
-          label="Household Income Type"
-          type="select"
-          value={profileData.Household_Income_Type}
-          onChange={handleChange}
-          error={errors.Household_Income_Type}
-          options={['Salaried', 'Self-Employed', 'Mixed']}
-        />
-        <FormGroup
-          id="Father_Gross_Monthly_Income"
-          label="Father Gross Monthly Income"
-          type="number"
-          value={profileData.Father_Gross_Monthly_Income ?? ''}
-          onChange={handleChange}
-          error={errors.Father_Gross_Monthly_Income}
-          placeholder="1000 - 50,000 (SGD)"
-        />
-        <FormGroup
-          id="Mother_Gross_Monthly_Income"
-          label="Mother Gross Monthly Income"
-          type="number"
-          value={profileData.Mother_Gross_Monthly_Income ?? ''}
-          onChange={handleChange}
-          error={errors.Mother_Gross_Monthly_Income}
-          placeholder="1000 - 50,000 (SGD)"
-        />
-        <FormGroup
-          id="Father_Disposable_Income"
-          label="Monthly Disposable Income(Father)(Optional)"
-          type="number"
-          value={profileData.Father_Disposable_Income ?? ''}
-          onChange={handleChange}
-          error={errors.Father_Disposable_Income}
-          placeholder="1000 - 50,000 (SGD)"
-        />
-        <FormGroup
-          id="Mother_Disposable_Income"
-          label="Monthly Disposable Income(Mother)(Optional) "
-          type="number"
-          value={profileData.Mother_Disposable_Income ?? ''}
-          onChange={handleChange}
-          error={errors.Mother_Disposable_Income}
-          placeholder="1000 - 50,000 (SGD)"
-        />
-        <FormGroup
-          id="Child_Name"
-          label="Child Name"
-          type="text"
-          value={profileData.Child_Name}
-          onChange={handleChange}
-          error={errors.Household_Income_Type}
-          placeholder="Enter Child's Name"
-        />
-        <FormGroup
-          id="Family_Savings"
-          label="Family Savings(Optional)"
-          type="number"
-          value={profileData.Family_Savings ?? ''}
-          onChange={handleChange}
-          error={errors.Family_Savings}
-          placeholder="10,000 - 100,000 (SGD)"
-        />
-        <FormGroup
-          id="Child_Gender"
-          label="Child Gender"
-          type="select"
-          value={profileData.Child_Gender}
-          onChange={handleChange}
-          error={errors.Child_Gender}
-          options={['Male', 'Female']}
-        />
-        <FormGroup
-          id="Realism_Level"
-          label="Realism Level"
-          type="select"
-          value={profileData.Realism_Level}
-          onChange={handleChange}
-          error={errors.Realism_Level}
-          options={['High', 'Medium', 'Low']}
-        />
-        <div className="form-group">
-          {/* Empty spacer for layout alignment */}
-        </div>
+    <div className="page-center-wrapper">  
+      <div className="profile-container">
+        <h2>Create your Profile</h2>
+        <form onSubmit={handleSubmit} className="form-grid-layout">
+          {/* Helper component for rendering group */}
+          <FormGroup
+            id="Father_Residency"
+            label="Father Residency"
+            type="select"
+            value={profileData.Father_Residency}
+            onChange={handleChange}
+            error={errors.Father_Residency}
+            options={['Singaporean', 'PR', 'Foreigner']}
+          />
+          <FormGroup
+            id="Mother_Residency"
+            label="Mother Residency"
+            type="select"
+            value={profileData.Mother_Residency}
+            onChange={handleChange}
+            error={errors.Mother_Residency}
+            options={['Singaporean', 'PR', 'Foreigner']}
+          />
+          <FormGroup
+            id="Household_Income_Type"
+            label="Household Income Type"
+            type="select"
+            value={profileData.Household_Income_Type}
+            onChange={handleChange}
+            error={errors.Household_Income_Type}
+            options={['Salaried', 'Self-Employed', 'Mixed']}
+          />
+          <FormGroup
+            id="Father_Gross_Monthly_Income"
+            label="Father Gross Monthly Income"
+            type="number"
+            value={profileData.Father_Gross_Monthly_Income ?? ''}
+            onChange={handleChange}
+            error={errors.Father_Gross_Monthly_Income}
+            placeholder="1000 - 50,000 (SGD)"
+          />
+          <FormGroup
+            id="Mother_Gross_Monthly_Income"
+            label="Mother Gross Monthly Income"
+            type="number"
+            value={profileData.Mother_Gross_Monthly_Income ?? ''}
+            onChange={handleChange}
+            error={errors.Mother_Gross_Monthly_Income}
+            placeholder="1000 - 50,000 (SGD)"
+          />
+          <FormGroup
+            id="Father_Disposable_Income"
+            label="Monthly Disposable Income(Father)(Optional)"
+            type="number"
+            value={profileData.Father_Disposable_Income ?? ''}
+            onChange={handleChange}
+            error={errors.Father_Disposable_Income}
+            placeholder="1000 - 50,000 (SGD)"
+          />
+          <FormGroup
+            id="Mother_Disposable_Income"
+            label="Monthly Disposable Income(Mother)(Optional) "
+            type="number"
+            value={profileData.Mother_Disposable_Income ?? ''}
+            onChange={handleChange}
+            error={errors.Mother_Disposable_Income}
+            placeholder="1000 - 50,000 (SGD)"
+          />
+          <FormGroup
+            id="Child_Name"
+            label="Child Name"
+            type="text"
+            value={profileData.Child_Name}
+            onChange={handleChange}
+            error={errors.Household_Income_Type}
+            placeholder="Enter Child's Name"
+          />
+          <FormGroup
+            id="Family_Savings"
+            label="Family Savings(Optional)"
+            type="number"
+            value={profileData.Family_Savings ?? ''}
+            onChange={handleChange}
+            error={errors.Family_Savings}
+            placeholder="10,000 - 100,000 (SGD)"
+          />
+          <FormGroup
+            id="Child_Gender"
+            label="Child Gender"
+            type="select"
+            value={profileData.Child_Gender}
+            onChange={handleChange}
+            error={errors.Child_Gender}
+            options={['Male', 'Female']}
+          />
+          <FormGroup
+            id="Realism_Level"
+            label="Realism Level"
+            type="select"
+            value={profileData.Realism_Level}
+            onChange={handleChange}
+            error={errors.Realism_Level}
+            options={['High', 'Medium', 'Low']}
+          />
+          <div className="form-group">
+            {/* Empty spacer for layout alignment */}
+          </div>
 
-        {/* Buttons */}
-        <div className="button-group">
-          <button type="submit" className="save-button">Save</button>
-          <button type="button" className="modify-button" onClick={handleModifyButton}>Modify</button>
-          <button type="button" className="delete-button" onClick={handleDeleteButton}>Delete</button>
-        </div>
-      </form>
+          {/* Buttons */}
+          <div className="button-group">
+            <button type="submit" className="save-button">Save</button>
+            <button type="button" className="modify-button" onClick={handleModifyButton}>Modify</button>
+            <button type="button" className="delete-button" onClick={handleDeleteButton}>Delete</button>
+          </div>
+        </form>
+      </div>
     </div>
     );
 }

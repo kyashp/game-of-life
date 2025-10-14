@@ -1,14 +1,18 @@
 body{
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #8b93ff80;
+    min-height: 100vh;
+    margin: 0;
+}
+.page-center-wrapper{
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    margin: 0;
+    width: auto;
 }
 .profile-container{
     background-color: #8b93ff80;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
