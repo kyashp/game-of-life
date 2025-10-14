@@ -14,12 +14,12 @@ body{
 .profile-container{
     background-color: #8b93ff80;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding: 30px;
-    border-radius: 12px;
+    padding: 25px;
+    border-radius: 25px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     width: 1000px;
     max-width: 90%;
-    margin: 20px ;
+    margin: 80px ;
 }
 h2{
     font-size: xx-large;
@@ -65,6 +65,11 @@ input, select{
     gap: 15px;
     margin-top: 30px;
 }
+.button-group {
+    display: flex;
+    gap: 10px; /* Replaces margin-right */
+}
+
 .button-group button{
     padding: 12px 25px;
     border: none;
