@@ -1,7 +1,12 @@
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
+import Help_popup from './Help_popup';
 
 export default function Navbar() {
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   return (
     <div className="fixed top-0 left-0 right-0 z-50 p-4">
 
@@ -49,19 +54,19 @@ export default function Navbar() {
             >
               Insights
             </Link>
-            <Link 
-              href="/Help_Page" 
+            <button 
+              onClick={() => setIsHelpOpen(true)}
               className="hover:text-black transition-colors duration-200 text-lg"
             >
               Help
-            </Link>
+            </button>
 
           </div>
         </nav>
       </div>
 
-
-
+      {/* Help Popup */}
+      <Help_popup isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
     </div>
   );
