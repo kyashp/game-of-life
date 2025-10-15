@@ -95,7 +95,7 @@ export default function LifeSim() {
       backgroundColor: '#F4C4C4',
       borderRadius: '40px',
       border: '2px solid #2D3142',
-      margin: '100px auto',
+      margin: '0px auto',
       width: '85%',
       maxWidth: '800px',
       padding: '30px',

@@ -66,7 +66,7 @@ export default function Help_popup({ isOpen, onClose }) {
         <div className="sticky bottom-0 w-full p-4 bg-white border-t flex justify-center">
           <button
             onClick={onClose}
-            className=" bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
+            className=" bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 cursor-pointer"
           >
             Close
           </button>

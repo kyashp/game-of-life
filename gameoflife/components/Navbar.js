@@ -8,7 +8,7 @@ import Help_popup from './Help_popup';
 export default function Navbar() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 p-4">
+    <div className="top-0 left-0 right-0 z-50 p-4">
 
       {/* Small Navbar - Top Right */}
       <div className="absolute top-4 right-8 "> {/* right padding */}
