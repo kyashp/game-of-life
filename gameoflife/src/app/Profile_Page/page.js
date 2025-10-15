@@ -1,7 +1,122 @@
 'use client'; //required for using client side features like useState, event handlers
 
 import React,{useState} from 'react';
-import './styles.css';
+
+// === Content from styles.css embedded as a string ===
+const CSS_STYLES = `
+body{
+    background-color: #8b93ff80;
+    min-height: 100vh;
+    margin: 0;
+}
+.page-center-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: auto;
+}
+.profile-container{
+    background-color: #8b93ff80;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 25px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 1000px;
+    max-width: 90%;
+    margin-top: -140px;
+}
+.profile-container h2{
+    font-size: xx-large;
+    font-weight: bold;
+    text-align: center;
+    color: #2f2e48;
+    margin-bottom: 25px;
+}
+.form-grid-layout{
+    display: grid;
+    grid-template-columns: repeat(3,1fr); /* 3 columns */
+    gap: 20px;
+}
+.form-group{
+    border-radius: 100%;
+    display: flex;
+    flex-direction: column;
+}
+label{
+    font-weight: bold;
+    color: #484670;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+input, select{
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1em;
+    background-color: #fff;
+    color: #333;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%238a8a8a" d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.actions{
+    grid-column: 1 / -1; /* Span all columns */
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+.button-group {
+    display: flex;
+    gap: 10px; /* Replaces margin-right */
+}
+
+.button-group button{
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: background-color 0.2s;
+}
+.save-button{
+    background-color: #00bf63;
+    color: white;
+}
+.modify-button{
+    background-color: #ffc107;
+    color: white;
+}
+.delete-button{
+    background-color: #ff3131;
+    color: white;
+}
+.button-group button:hover{
+    opacity: 0.7;
+}
+.error-message{
+    color: #dc3545;
+    font-size: 0.85em;
+    margin-top: 5px;
+}
+.input-error{
+    border-color: #dc3545 !important;
+}
+`;
+
+// Component to inject the CSS string into the DOM
+const GlobalStyles = () => {
+    return (
+        <style dangerouslySetInnerHTML={{ __html: CSS_STYLES }} />
+    );
+};
+// =======================================================
+
 
 //Initial state of Profile Data
 const initialProfileData={
@@ -117,123 +232,126 @@ export default function Profile() {
   };
 
   return (
-    <div className="page-center-wrapper">  
-      <div className="profile-container">
-        <h2>Create your Profile</h2>
-        <form onSubmit={handleSubmit} className="form-grid-layout">
-          {/* Helper component for rendering group */}
-          <FormGroup
-            id="Father_Residency"
-            label="Father Residency"
-            type="select"
-            value={profileData.Father_Residency}
-            onChange={handleChange}
-            error={errors.Father_Residency}
-            options={['Singaporean', 'PR']}
-          />
-          <FormGroup
-            id="Mother_Residency"
-            label="Mother Residency"
-            type="select"
-            value={profileData.Mother_Residency}
-            onChange={handleChange}
-            error={errors.Mother_Residency}
-            options={['Singaporean', 'PR']}
-          />
-          <FormGroup
-            id="Household_Income_Type"
-            label="Household Income Type"
-            type="select"
-            value={profileData.Household_Income_Type}
-            onChange={handleChange}
-            error={errors.Household_Income_Type}
-            options={['Single', 'Mixed']}
-          />
-          <FormGroup
-            id="Father_Gross_Monthly_Income"
-            label="Father Gross Monthly Income"
-            type="number"
-            value={profileData.Father_Gross_Monthly_Income ?? ''}
-            onChange={handleChange}
-            error={errors.Father_Gross_Monthly_Income}
-            placeholder="1000 - 50,000 (SGD)"
-          />
-          <FormGroup
-            id="Mother_Gross_Monthly_Income"
-            label="Mother Gross Monthly Income"
-            type="number"
-            value={profileData.Mother_Gross_Monthly_Income ?? ''}
-            onChange={handleChange}
-            error={errors.Mother_Gross_Monthly_Income}
-            placeholder="1000 - 50,000 (SGD)"
-          />
-          <FormGroup
-            id="Father_Disposable_Income"
-            label="Monthly Disposable Income(Father)(Optional)"
-            type="number"
-            value={profileData.Father_Disposable_Income ?? ''}
-            onChange={handleChange}
-            error={errors.Father_Disposable_Income}
-            placeholder="1000 - 50,000 (SGD)"
-          />
-          <FormGroup
-            id="Mother_Disposable_Income"
-            label="Monthly Disposable Income(Mother)(Optional) "
-            type="number"
-            value={profileData.Mother_Disposable_Income ?? ''}
-            onChange={handleChange}
-            error={errors.Mother_Disposable_Income}
-            placeholder="1000 - 50,000 (SGD)"
-          />
-          <FormGroup
-            id="Child_Name"
-            label="Child Name"
-            type="text"
-            value={profileData.Child_Name}
-            onChange={handleChange}
-            error={errors.Household_Income_Type}
-            placeholder="Enter Child's Name"
-          />
-          <FormGroup
-            id="Family_Savings"
-            label="Family Savings(Optional)"
-            type="number"
-            value={profileData.Family_Savings ?? ''}
-            onChange={handleChange}
-            error={errors.Family_Savings}
-            placeholder="10,000 - 100,000 (SGD)"
-          />
-          <FormGroup
-            id="Child_Gender"
-            label="Child Gender"
-            type="select"
-            value={profileData.Child_Gender}
-            onChange={handleChange}
-            error={errors.Child_Gender}
-            options={['Male', 'Female']}
-          />
-          <FormGroup
-            id="Realism_Level"
-            label="Realism Level"
-            type="select"
-            value={profileData.Realism_Level}
-            onChange={handleChange}
-            error={errors.Realism_Level}
-            options={['Optimistic', 'Neutral', 'Pessimistic']}
-          />
-          <div className="form-group">
-            {/* Empty spacer for layout alignment */}
-          </div>
+    <> {/* Used a React Fragment to render both the styles and the main content */}
+      <GlobalStyles />
+      <div className="page-center-wrapper">  
+        <div className="profile-container">
+          <h2>Create your Profile</h2>
+          <form onSubmit={handleSubmit} className="form-grid-layout">
+            {/* Helper component for rendering group */}
+            <FormGroup
+              id="Father_Residency"
+              label="Father Residency"
+              type="select"
+              value={profileData.Father_Residency}
+              onChange={handleChange}
+              error={errors.Father_Residency}
+              options={['Singaporean', 'PR']}
+            />
+            <FormGroup
+              id="Mother_Residency"
+              label="Mother Residency"
+              type="select"
+              value={profileData.Mother_Residency}
+              onChange={handleChange}
+              error={errors.Mother_Residency}
+              options={['Singaporean', 'PR']}
+            />
+            <FormGroup
+              id="Household_Income_Type"
+              label="Household Income Type"
+              type="select"
+              value={profileData.Household_Income_Type}
+              onChange={handleChange}
+              error={errors.Household_Income_Type}
+              options={['Single', 'Mixed']}
+            />
+            <FormGroup
+              id="Father_Gross_Monthly_Income"
+              label="Father Gross Monthly Income"
+              type="number"
+              value={profileData.Father_Gross_Monthly_Income ?? ''}
+              onChange={handleChange}
+              error={errors.Father_Gross_Monthly_Income}
+              placeholder="1000 - 50,000 (SGD)"
+            />
+            <FormGroup
+              id="Mother_Gross_Monthly_Income"
+              label="Mother Gross Monthly Income"
+              type="number"
+              value={profileData.Mother_Gross_Monthly_Income ?? ''}
+              onChange={handleChange}
+              error={errors.Mother_Gross_Monthly_Income}
+              placeholder="1000 - 50,000 (SGD)"
+            />
+            <FormGroup
+              id="Father_Disposable_Income"
+              label="Monthly Disposable Income(Father)(Optional)"
+              type="number"
+              value={profileData.Father_Disposable_Income ?? ''}
+              onChange={handleChange}
+              error={errors.Father_Disposable_Income}
+              placeholder="1000 - 50,000 (SGD)"
+            />
+            <FormGroup
+              id="Mother_Disposable_Income"
+              label="Monthly Disposable Income(Mother)(Optional) "
+              type="number"
+              value={profileData.Mother_Disposable_Income ?? ''}
+              onChange={handleChange}
+              error={errors.Mother_Disposable_Income}
+              placeholder="1000 - 50,000 (SGD)"
+            />
+            <FormGroup
+              id="Child_Name"
+              label="Child Name"
+              type="text"
+              value={profileData.Child_Name}
+              onChange={handleChange}
+              error={errors.Household_Income_Type}
+              placeholder="Enter Child's Name"
+            />
+            <FormGroup
+              id="Family_Savings"
+              label="Family Savings(Optional)"
+              type="number"
+              value={profileData.Family_Savings ?? ''}
+              onChange={handleChange}
+              error={errors.Family_Savings}
+              placeholder="10,000 - 100,000 (SGD)"
+            />
+            <FormGroup
+              id="Child_Gender"
+              label="Child Gender"
+              type="select"
+              value={profileData.Child_Gender}
+              onChange={handleChange}
+              error={errors.Child_Gender}
+              options={['Male', 'Female']}
+            />
+            <FormGroup
+              id="Realism_Level"
+              label="Realism Level"
+              type="select"
+              value={profileData.Realism_Level}
+              onChange={handleChange}
+              error={errors.Realism_Level}
+              options={['Optimistic', 'Neutral', 'Pessimistic']}
+            />
+            <div className="form-group">
+              {/* Empty spacer for layout alignment */}
+            </div>
 
-          {/* Buttons */}
-          <div className="button-group">
-            <button type="submit" className="save-button">Save</button>
-            <button type="button" className="modify-button" onClick={handleModifyButton}>Modify</button>
-            <button type="button" className="delete-button" onClick={handleDeleteButton}>Delete</button>
-          </div>
-        </form>
+            {/* Buttons */}
+            <div className="button-group">
+              <button type="submit" className="save-button">Save</button>
+              <button type="button" className="modify-button" onClick={handleModifyButton}>Modify</button>
+              <button type="button" className="delete-button" onClick={handleDeleteButton}>Delete</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
     );
 }
 
