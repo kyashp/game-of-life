@@ -129,7 +129,7 @@ export default function Profile() {
             value={profileData.Father_Residency}
             onChange={handleChange}
             error={errors.Father_Residency}
-            options={['Singaporean', 'PR', 'Foreigner']}
+            options={['Singaporean', 'PR']}
           />
           <FormGroup
             id="Mother_Residency"
@@ -138,7 +138,7 @@ export default function Profile() {
             value={profileData.Mother_Residency}
             onChange={handleChange}
             error={errors.Mother_Residency}
-            options={['Singaporean', 'PR', 'Foreigner']}
+            options={['Singaporean', 'PR']}
           />
           <FormGroup
             id="Household_Income_Type"
@@ -147,7 +147,7 @@ export default function Profile() {
             value={profileData.Household_Income_Type}
             onChange={handleChange}
             error={errors.Household_Income_Type}
-            options={['Salaried', 'Self-Employed', 'Mixed']}
+            options={['Single', 'Mixed']}
           />
           <FormGroup
             id="Father_Gross_Monthly_Income"
@@ -219,7 +219,7 @@ export default function Profile() {
             value={profileData.Realism_Level}
             onChange={handleChange}
             error={errors.Realism_Level}
-            options={['High', 'Medium', 'Low']}
+            options={['Optimistic', 'Neutral', 'Pessimistic']}
           />
           <div className="form-group">
             {/* Empty spacer for layout alignment */}
