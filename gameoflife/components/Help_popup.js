@@ -50,7 +50,7 @@ export default function Help_popup({ isOpen, onClose }) {
             <section>
               <h2 className="text-2xl font-semibold mb-4 text-orange-700">Disclaimer</h2>
               <p className="text-lg mb-4">
-                The "Game of Life" application is designed to assist Singaporean families in family planning and budgeting by visualizing the potential financial costs of raising a child.
+                The &quot;Game of Life&quot; application is designed to assist Singaporean families in family planning and budgeting by visualizing the potential financial costs of raising a child.
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>No Financial Advice: This application is not a substitute for professional financial advice. The data is for general guidance only.</li>
@@ -66,7 +66,7 @@ export default function Help_popup({ isOpen, onClose }) {
         <div className="sticky bottom-0 w-full p-4 bg-white border-t flex justify-center">
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
+            className=" bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
           >
             Close
           </button>
