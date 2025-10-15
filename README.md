@@ -8,17 +8,17 @@ Pages:
 - ## Landing Page: [Abhi]
 
     - Frontend: 
-        - Header
-        - description
-        - [Start simulating Now] button 
-        - [How to use Game of life] button- link to the help popup --> [Nigel]
+        - Header (done)
+        - description (done)
+        - [Start simulating Now] button (done) 
+        - [How to use Game of life] button- link to the help popup --> [Nigel] (created, just need to link)
 
 
-        - Login: 
-            - Username input field
+        - Login: (done)
+            - Username input field 
             - Password input field
 
-        - Sign Up: 
+        - Sign Up: (done)
             - Input fields: 
                 - Username
                 - Email
@@ -35,6 +35,7 @@ Pages:
         [Use FireBase]
         - Create database for storing registered users, Username, Email, Hashed Password, password  
         - create a session storage feature for guest users (client-side)
+        - incorporate authentication 
         -  maybe also local storage 
         - route api via /api 
         
