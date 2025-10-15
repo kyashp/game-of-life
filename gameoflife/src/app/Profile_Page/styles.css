@@ -19,7 +19,7 @@ body{
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     width: 1000px;
     max-width: 90%;
-    margin: 80px ;
+    margin-top: -140px;
 }
 h2{
     font-size: xx-large;
