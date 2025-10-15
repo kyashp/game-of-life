@@ -17,7 +17,7 @@ export default function Help_popup({ isOpen, onClose }) {
         <div className="overflow-y-auto p-8 max-h-[calc(80vh-4rem)] text-black">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-[#2D3142]">Help and Support</h1>
+            <h1 className="text-4xl font-bold text-[#2D3142] ">Help and Support</h1>
           </div>
           
           {/* Subheading and content */}

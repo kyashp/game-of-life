@@ -8,8 +8,8 @@ Pages:
 - ## Landing Page: [Abhi]
 
     - Frontend: 
-        - Header (done)
-        - description (done)
+        - Header                        (done)
+        - description                   (done)
         - [Start simulating Now] button (done) 
         - [How to use Game of life] button- link to the help popup --> [Nigel] (created, just need to link)
 
@@ -70,7 +70,7 @@ Pages:
 
 - ## Insights Page: 
 
-    - Frontend: [Sujith]
+    - Frontend: [Yash]
         -  interface to input number of children 
         - disclaimer 
         - [generate insights] button 
