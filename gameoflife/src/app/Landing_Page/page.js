@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Help_popup from '../../../components/Help_popup';
-//import { signUp, signIn } from '@/lib/authHelpers';
-//import { GuestStorageManager } from '@/utils/guestStorage';
+import { signUp, signIn } from '@/lib/authHelpers';
+import { GuestStorageManager } from '@/utils/guestStorage';
 
 export default function Landing() {
   const [isSignUp, setIsSignUp] = useState(false);
