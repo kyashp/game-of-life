@@ -97,12 +97,12 @@ export default function Landing() {
           backgroundSize: '40px 40px'
         }}
       >
-        <h1 className="text-5xl font-bold mb-4 text-gray-700 text-center">
+        <h1 className="text-5xl font-bold mb-4 text-gray-700 text-left pl-5.5">
           Strategise your parenthood{' '}
           <span className="text-[#f47068]">finances</span> with Game of Life
         </h1>
 
-        <p className="text-2xl text-gray-700 text-center max-w-3xl">
+        <p className="text-2xl text-gray-700 text-left max-w-3xl">
           Simulate your child&apos;s future in Singapore, make strategic decisions, 
           and secure your finances with our platform. Sign up for an account to 
           save progress or play as a guest.
