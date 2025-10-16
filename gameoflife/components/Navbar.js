@@ -40,7 +40,7 @@ export default function Navbar() {
             </Link>
             <button 
               onClick={() => setIsHelpOpen(true)}
-              className="hover:text-black transition-colors duration-200 text-lg"
+              className="hover:text-black transition-colors duration-200 text-lg cursor-pointer"
             >
               Help
             </button>
