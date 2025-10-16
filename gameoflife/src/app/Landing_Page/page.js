@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Help_popup from '../../../components/Help_popup';
-import { signUp, signIn } from '@/lib/authHelpers';
-import { GuestStorageManager } from '@/utils/guestStorage';
+import Link from 'next/link';
+//import { signUp, signIn } from '@/lib/authHelpers';
+//import { GuestStorageManager } from '@/utils/guestStorage';
 
 export default function Landing() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -103,9 +104,9 @@ export default function Landing() {
         </p>
 
         <div className="flex gap-4 mt-6">
-          <button className="px-6 py-3 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer">
+          <Link href="/Profile_Page" className=" px-6 pt-6 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer">
             Start simulating now →
-          </button>
+          </Link>
           <button className="px-6 py-3 bg-null text-[#8b93ff] rounded-lg hover:border border-[#8b93ff] flex items-center justify-center gap-2 cursor-pointer" onClick={() => setIsHelpOpen(true)}>
             <span>How to use Game of Life?</span>
             <span className="text-5xl leading-none flex items-center">»</span>
