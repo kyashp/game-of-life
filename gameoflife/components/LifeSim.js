@@ -20,8 +20,8 @@ const Icon = ({ src, alt }) => (
   <Image
     src={src}
     alt={alt}
-    width={40}
-    height={40}
+    width={50}
+    height={50}
     style={{ position: 'absolute', top: '0px', right: '0px' }}
   />
 );
@@ -67,9 +67,9 @@ const ControlButton = ({ children, style, icon, onClick }) => (
 );
 
 
-export default function LifeSim() {
+export default function LifeSim({ onSimulationEnd }) {
   const [status, setStatus] = useState('stopped'); // 'stopped', 'running', 'paused'
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(0.5);
 
   const handleStart = () => {
     setStatus('running');
@@ -84,6 +84,9 @@ export default function LifeSim() {
   const handleEnd = () => {
     setStatus('stopped');
     console.log('Simulation Ended');
+    if (onSimulationEnd) {
+        onSimulationEnd({});
+    }
   };
 
   const handleSpeedChange = (e) => {
@@ -115,7 +118,7 @@ export default function LifeSim() {
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <Card style={{ minHeight: '150px' }}>
-            <Image src="/baby.png" alt="Baby" width={100} height={100} style={{ position: 'absolute', top: '0px', right: '0px' }} />
+            <Icon src="/next.svg" alt="Baby" />
             <div style={{ color: '#2D3142', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px' }}>
               <div><strong>Name:</strong> Child 1</div>
               <div><strong>Age:</strong> 0 years 0 months</div>
@@ -124,7 +127,7 @@ export default function LifeSim() {
             </div>
           </Card>
           <Card>
-            <Icon src="/education.png" alt="Education" />
+            <Icon src="/next.svg" alt="Education" />
             <Title>Edusave</Title>
             <Amount>$10,000</Amount>
           </Card>
@@ -133,17 +136,17 @@ export default function LifeSim() {
         {/* Right Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <Card>
-            <Icon src="/household_savings.png" alt="Savings" />
+            <Icon src="/next.svg" alt="Savings" />
             <Title>Household Savings</Title>
             <Amount color="#00C853">$10,000</Amount>
           </Card>
           <Card>
-            <Icon src="/government_benefits.png" alt="Government" />
+            <Icon src="/next.svg" alt="Government" />
             <Title>Total Government Benefits</Title>
             <Amount>$10,000</Amount>
           </Card>
           <Card>
-            <Icon src="/expenditure.png" alt="Expenditure" />
+            <Icon src="/next.svg" alt="Expenditure" />
             <Title>Cumulative Expenditure</Title>
             <Amount color="#FF3B3B">$10,000</Amount>
           </Card>
@@ -152,7 +155,7 @@ export default function LifeSim() {
         {/* Bottom Controls */}
         <div style={{ gridColumn: '1 / 2', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
             <span style={{ fontSize: '22px', color: '#2D3142', fontWeight: '500' }}>Speed</span>
-            <input type="range" min="0.1" max="2" step="0.1" value={speed} onChange={handleSpeedChange} style={{ width: '100%' }} />
+            <input type="range" min="0.1" max="2" step="0.1" value={speed} onChange={handleSpeedChange} style={{ width: '100%' }}/>
             <span style={{ fontSize: '20px', color: '#2D3142', width: '50px' }}>{speed}x</span>
         </div>
          <div style={{ gridColumn: '2 / 3', marginTop: '20px', display: 'flex', gap: '15px', justifyContent: 'flex-end', alignItems: 'center' }}>
