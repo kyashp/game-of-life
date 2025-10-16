@@ -120,6 +120,8 @@ export default function Landing() {
 
        {/* Right Section - Login/Signup */}
       <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-18 max-h-screen overflow-y-auto">
+      {/* Right Section - Login/Signup */}
+      <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-2 max-h-screen ">
         
         {/* Section Box */}
         <div className="bg-white pl-8 pr-8 pt-8 rounded-3xl shadow-lg border border-black w-full max-w-sm">
