@@ -44,7 +44,7 @@ const reliefsData = [
 
 export default function LifeSimDashboard({ simulationData }) {
   return (
-    <div className="max-w-[1400px] mx-auto px-10 pb-20">
+    <div className="max-w-[1400px] mx-auto px-10 pb-20 mt-10">
       <h2 className="text-4xl font-bold mb-9 text-[#2D3142]">Life Sim Dashboard</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-9">

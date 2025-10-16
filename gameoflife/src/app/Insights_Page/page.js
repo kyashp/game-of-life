@@ -125,7 +125,7 @@ export default function Insights() {
       </div>
 
       {showDashboard && (
-        <div ref={dashboardRef} className="max-w-[1400px] mx-auto px-10 pb-20">
+        <div ref={dashboardRef} className="max-w-[1400px] mx-auto px-10 pb-20 mt-10">
           <h2 className="text-4xl font-bold mb-9">Insights Dashboard</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-9">
