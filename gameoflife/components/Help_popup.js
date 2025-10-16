@@ -12,7 +12,7 @@ export default function Help_popup({ isOpen, onClose }) {
       ></div>
 
       {/* Modal content */}
-      <div className="relative bg-[#FFF9C4] rounded-lg shadow-xl w-[80%] max-w-2xl max-h-[80vh] overflow-hidden z-50">
+      <div className="relative bg-[#FFFFED] rounded-lg shadow-xl w-[80%] max-w-2xl max-h-[80vh] overflow-hidden z-50">
         {/* Scrollable content area */}
         <div className="overflow-y-auto p-8 max-h-[calc(80vh-4rem)] text-black">
           {/* Header */}
@@ -63,7 +63,7 @@ export default function Help_popup({ isOpen, onClose }) {
         </div>
 
         {/* Close button - fixed at bottom and centered*/}
-        <div className=" bg-[#FFF9C4] sticky bottom-0 w-full p-4 border-t flex justify-center">
+        <div className=" bg-[#FFFFED] sticky bottom-0 w-full p-4 border-t flex justify-center">
           <button
             onClick={onClose}
             className=" bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200 cursor-pointer"
