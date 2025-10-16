@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { signUp, signIn } from '@/lib/authHelpers';
-import { GuestStorageManager } from '@/utils/guestStorage';
+//import { signUp, signIn } from '@/lib/authHelpers';
+//import { GuestStorageManager } from '@/utils/guestStorage';
 
 export default function Landing() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -93,10 +93,10 @@ export default function Landing() {
           backgroundSize: '40px 40px'
         }}
       >
-        <h1 className="text-5xl font-bold mb-4">
+        <h1 className="text-5xl font-bold mb-4 text-gray-700">
           Strategise your parenthood <span className='text-[#f47068]'>finances</span> with Game of Life
         </h1>
-        <p className="text-2xl text-gray-600 text-center">
+        <p className="text-2xl text-gray-700 text-center">
           Simulate your child&apos;s future in Singapore, make strategic decisions, and secure your finances with our platform. 
           Sign up for an account to save progress or play as guest.
         </p>
@@ -122,7 +122,7 @@ export default function Landing() {
           {!isSignUp ? (
             // Login Form
             <form onSubmit={handleLogin}>
-              <h2 className="text-2xl font-semibold text-center mb-4">Welcome!</h2>
+              <h2 className="text-2xl font-semibold text-center mb-4 text-gray-700">Welcome!</h2>
 
               <input 
                 type="email"
@@ -130,7 +130,7 @@ export default function Landing() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-1 border-black focus:outline-none focus:bg-gray-100"
               />
 
               <input 
@@ -139,7 +139,7 @@ export default function Landing() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-1 border-black focus:outline-none focus:bg-gray-100"
               />
               
               <p>
