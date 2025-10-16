@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { signUp, signIn } from '@/lib/authHelpers';
 import { GuestStorageManager } from '@/utils/guestStorage';
 
@@ -96,7 +97,7 @@ export default function Landing() {
           Strategise your parenthood <span className='text-[#f47068]'>finances</span> with Game of Life
         </h1>
         <p className="text-2xl text-gray-600 text-center">
-          Simulate your child's future in Singapore, make strategic decisions, and secure your finances with our platform. 
+          Simulate your child&apos;s future in Singapore, make strategic decisions, and secure your finances with our platform. 
           Sign up for an account to save progress or play as guest.
         </p>
 
@@ -156,7 +157,7 @@ export default function Landing() {
               </button>
               
               <div className="mt-4 text-center">
-                <span className="text-gray-500">Don't have an account? </span>
+                <span className="text-gray-500">Don&apos;t have an account? </span>
                 <button 
                   type="button"
                   onClick={() => setIsSignUp(true)}
@@ -174,7 +175,7 @@ export default function Landing() {
 
                 <div className="flex justify-center ">
                   <button className="px-6 py-3 bg-white text-black border rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2">
-                    <img src="/Google-logo.png" alt="Google Logo" className="w-8 h-8"/>
+                    <Image src="/Google-logo.png" alt="Google Logo" width={50} height={50}/>
                     Sign in with Google
                   </button>
 

@@ -118,7 +118,7 @@ export default function LifeSim({ onSimulationEnd }) {
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <Card style={{ minHeight: '150px' }}>
-            <Icon src="/next.svg" alt="Baby" />
+            <Image src="/baby.png" alt="Baby" width={100} height={100} style={{ position: 'absolute', top: '0px', right: '0px' }}/>
             <div style={{ color: '#2D3142', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px' }}>
               <div><strong>Name:</strong> Child 1</div>
               <div><strong>Age:</strong> 0 years 0 months</div>
@@ -127,7 +127,7 @@ export default function LifeSim({ onSimulationEnd }) {
             </div>
           </Card>
           <Card>
-            <Icon src="/next.svg" alt="Education" />
+            <Icon src="/education.png" alt="Education" />
             <Title>Edusave</Title>
             <Amount>$10,000</Amount>
           </Card>
@@ -136,17 +136,17 @@ export default function LifeSim({ onSimulationEnd }) {
         {/* Right Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <Card>
-            <Icon src="/next.svg" alt="Savings" />
+            <Icon src="/household_savings.png" alt="Savings" />
             <Title>Household Savings</Title>
             <Amount color="#00C853">$10,000</Amount>
           </Card>
           <Card>
-            <Icon src="/next.svg" alt="Government" />
+            <Icon src="/government_benefits.png" alt="Government" />
             <Title>Total Government Benefits</Title>
             <Amount>$10,000</Amount>
           </Card>
           <Card>
-            <Icon src="/next.svg" alt="Expenditure" />
+            <Icon src="/expenditure.png" alt="Expenditure" />
             <Title>Cumulative Expenditure</Title>
             <Amount color="#FF3B3B">$10,000</Amount>
           </Card>
