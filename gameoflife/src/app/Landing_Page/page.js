@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { signUp, signIn } from '@/lib/authHelpers';
-import { GuestStorageManager } from '@/utils/guestStorage';
+import Help_popup from '../../../components/Help_popup';
+import Link from 'next/link';
+//import { signUp, signIn } from '@/lib/authHelpers';
+//import { GuestStorageManager } from '@/utils/guestStorage';
 
 export default function Landing() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -79,12 +81,12 @@ export default function Landing() {
     console.log('Guest session created:', guestId);
     router.push('/Profile_Page?mode=guest');
   };
-
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   return (
-    <div className="min-h-screen flex bg-[#fefcf3]">
+    <div className="flex bg-[#fefcf3] -mt-12">
       
       {/* Left Section */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8"
+      <div className="flex-1 flex flex-col items-center justify-center p-3"
         style={{
           backgroundImage: `
             linear-gradient(to right, #e5e7eb 1px, transparent 1px),
@@ -96,27 +98,31 @@ export default function Landing() {
         <h1 className="text-5xl font-bold mb-4 text-gray-700">
           Strategise your parenthood <span className='text-[#f47068]'>finances</span> with Game of Life
         </h1>
-        <p className="text-2xl text-gray-700 text-center">
+        <p className="text-2xl text-gray-700 text-left">
           Simulate your child&apos;s future in Singapore, make strategic decisions, and secure your finances with our platform. 
           Sign up for an account to save progress or play as guest.
         </p>
 
         <div className="flex gap-4 mt-6">
-          <button className="px-6 py-3 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors">
+          <Link href="/Profile_Page" className=" px-6 pt-6 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer">
             Start simulating now →
-          </button>
-          <button className="px-6 py-3 bg-null text-[#8b93ff] rounded-lg hover:border border-[#8b93ff] flex items-center justify-center gap-2">
+          </Link>
+          <button className="px-6 py-3 bg-null text-[#8b93ff] rounded-lg hover:border border-[#8b93ff] flex items-center justify-center gap-2 cursor-pointer" onClick={() => setIsHelpOpen(true)}>
             <span>How to use Game of Life?</span>
             <span className="text-5xl leading-none flex items-center">»</span>
           </button>
+          {/* Help Popup */}
+          <Help_popup isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         </div>
       </div>
 
+       {/* Right Section - Login/Signup */}
+      <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-18 max-h-screen overflow-y-auto">
       {/* Right Section - Login/Signup */}
       <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-2 max-h-screen ">
         
         {/* Section Box */}
-        <div className="bg-white p-8 rounded-3xl shadow-lg border border-black w-full max-w-sm">
+        <div className="bg-white pl-8 pr-8 pt-8 rounded-3xl shadow-lg border border-black w-full max-w-sm">
           
           {/* Login Form */}
           {!isSignUp ? (
@@ -143,7 +149,7 @@ export default function Landing() {
               />
               
               <p>
-                <a href="#" className="text-blue-500 hover:text-blue-600 font-medium flex justify-end">
+                <a href="#" className="text-blue-500 hover:text-blue-600 font-medium flex justify-end mb-1 hover:underline">
                   Forgot Password?
                 </a>
               </p>
@@ -151,7 +157,7 @@ export default function Landing() {
               <button 
                 type="submit"
                 disabled={isLoading}
-                className="w-full px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors disabled:opacity-50"
+                className="w-full px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? 'Logging in...' : 'Login'}
               </button>
@@ -161,7 +167,7 @@ export default function Landing() {
                 <button 
                   type="button"
                   onClick={() => setIsSignUp(true)}
-                  className="text-blue-500 hover:underline font-medium"
+                  className="text-blue-500 hover:underline font-medium  cursor-pointer"
                 >
                   Sign Up
                 </button>
@@ -174,11 +180,10 @@ export default function Landing() {
                 </div>
 
                 <div className="flex justify-center ">
-                  <button className="px-6 py-3 bg-white text-black border rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2">
+                  <button className="px-3 py-2 bg-white text-black border rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer">
                     <Image src="/Google-logo.png" alt="Google Logo" width={50} height={50}/>
                     Sign in with Google
                   </button>
-
                 </div>
 
                 <div className="flex items-center mt-4 mb-2">
@@ -191,7 +196,7 @@ export default function Landing() {
                 <button 
                   type="button"
                   onClick={handleGuestLogin}
-                  className="px-6 py-3 bg-null text-blue-600 hover:underline"
+                  className="px-6 py-3 bg-null text-blue-600 hover:underline cursor-pointer"
                 >
                   Play as Guest
                 </button>
@@ -200,7 +205,7 @@ export default function Landing() {
           ) : (
             // Sign Up Form
             <form onSubmit={handleSignUp}>
-              <h2 className="text-2xl font-semibold text-center mb-4">Create Account</h2>
+              <h2 className="text-2xl font-semibold text-center mb-4 text-gray-700">Create Account</h2>
 
               <input 
                 type="text"
@@ -208,7 +213,7 @@ export default function Landing() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-1 border-black focus:outline-none focus:bg-gray-100"
               />
 
               <input 
@@ -217,7 +222,7 @@ export default function Landing() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-1 border-black focus:outline-none focus:bg-gray-100"
               />
 
               <input 
@@ -227,7 +232,7 @@ export default function Landing() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-1 border-black focus:outline-none focus:bg-gray-100"
               />
 
               <input 
@@ -236,23 +241,23 @@ export default function Landing() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+                className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-1 border-black focus:outline-none focus:bg-gray-100"
               />
               
               <button 
                 type="submit"
                 disabled={isLoading}
-                className="w-full px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50"
+                className="w-full px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </button>
               
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center mb-3">
                 <span className="text-gray-500">Already have an account? </span>
                 <button 
                   type="button"
                   onClick={() => setIsSignUp(false)}
-                  className="text-blue-500 hover:underline font-medium"
+                  className="text-blue-500 hover:underline font-medium cursor-pointer"
                 >
                   Login
                 </button>
