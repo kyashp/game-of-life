@@ -24,7 +24,7 @@ body{
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     width: 1000px;
     max-width: 90%;
-    margin-top: -140px;
+    margin-top: -100px;
 }
 .profile-container h2{
     font-size: xx-large;

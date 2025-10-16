@@ -85,7 +85,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="flex bg-[#fefcf3] -mt-12">
+    <div className="flex bg-[#fefcf3] -mt-2">
       {/* Left Section */}
       <div
         className="flex-1 flex flex-col items-center justify-center p-3"
@@ -111,7 +111,7 @@ export default function Landing() {
         <div className="flex gap-4 mt-6">
           <Link
             href="/Profile_Page"
-            className="px-6 py-4 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer"
+            className="px-6 pt-5 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer"
           >
             Start simulating now →
           </Link>
