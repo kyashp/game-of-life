@@ -1,4 +1,4 @@
-// helper component to hide or show navbar based on props
+// helper component to hide or show navbar based on the page
 
 'use client';
 

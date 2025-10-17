@@ -1,3 +1,4 @@
+// Sign Up form component
 'use client';
 
 export default function SignUpForm({

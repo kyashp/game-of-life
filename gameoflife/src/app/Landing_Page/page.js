@@ -1,18 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Help_popup from '../../../components/Help_popup';
 import Link from 'next/link';
 import LoginForm from '../../../components/Login';
 import SignUpForm from '../../../components/Sign_Up';
-import { signUp, signIn } from '@/lib/authHelpers';
-import { GuestStorageManager } from '@/utils/guestStorage'; 
+import UserAccount from '../../../components/User_Account';
+import { signUp, signIn, onAuthChange } from '@/lib/authHelpers';
+import { GuestStorageManager } from '@/utils/guestStorage';
 
 export default function Landing() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
 
   // Form states
@@ -21,6 +24,16 @@ export default function Landing() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  // Check auth state on mount
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => {
+      setCurrentUser(user);
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Handle Sign Up
   const handleSignUp = async (e) => {
@@ -44,7 +57,7 @@ export default function Landing() {
 
       if (result.success) {
         alert('Account created successfully!');
-        router.push('/Profile_Page');
+        // User state will update automatically via onAuthChange
       } else {
         alert(`Sign up failed: ${result.error}`);
       }
@@ -65,7 +78,8 @@ export default function Landing() {
       const result = await signIn(email, password);
 
       if (result.success) {
-        router.push('/Profile_Page');
+        // User state will update automatically via onAuthChange
+        alert('Login successful!');
       } else {
         alert(`Login failed: ${result.error}`);
       }
@@ -103,8 +117,8 @@ export default function Landing() {
         </h1>
 
         <p className="text-2xl text-gray-700 text-left max-w-3xl">
-          Simulate your child&apos;s future in Singapore, make strategic decisions, 
-          and secure your finances with our platform. Sign up for an account to 
+          Simulate your child&apos;s future in Singapore, make strategic decisions,
+          and secure your finances with our platform. Sign up for an account to
           save progress or play as a guest.
         </p>
 
@@ -122,43 +136,58 @@ export default function Landing() {
           >
             <span>How to use Game of Life?</span>
             <span className="text-3xl leading-none flex items-center">»</span>
-          </button> 
+          </button>
 
           {/* Help Popup */}
           <Help_popup isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         </div>
       </div>
 
-      {/* Right Section - Login/Signup */}
+      {/* Right Section - Login/Signup/User Account */}
       <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-10 max-h-screen overflow-y-auto">
-        <div className="bg-white px-8 pt-8 pb-6 rounded-3xl shadow-lg border border-black w-full max-w-sm">
-          {!isSignUp ? (
-            <LoginForm
-              email={email}
-              password={password}
-              setEmail={setEmail}
-              setPassword={setPassword}
-              isLoading={isLoading}
-              handleLogin={handleLogin}
-              handleGuestLogin={handleGuestLogin}
-              switchToSignUp={() => setIsSignUp(true)}
-            />
-          ) : (
-            <SignUpForm
-              username={username}
-              email={email}
-              password={password}
-              confirmPassword={confirmPassword}
-              setUsername={setUsername}
-              setEmail={setEmail}
-              setPassword={setPassword}
-              setConfirmPassword={setConfirmPassword}
-              isLoading={isLoading}
-              handleSignUp={handleSignUp}
-              switchToLogin={() => setIsSignUp(false)}
-            />
-          )}
-        </div>
+        
+        {authLoading ? (
+          // Loading state
+          <div className="bg-white px-8 pt-8 pb-6 rounded-3xl shadow-lg border border-black w-full max-w-sm flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="animate-spin text-5xl mb-4">⏳</div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        ) : currentUser ? (
+          // User is logged in - Show User Account
+          <UserAccount user={currentUser} />
+        ) : (
+          // User is not logged in - Show Login/Signup
+          <div className="bg-white px-8 pt-8 pb-6 rounded-3xl shadow-lg border border-black w-full max-w-sm">
+            {!isSignUp ? (
+              <LoginForm
+                email={email}
+                password={password}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                isLoading={isLoading}
+                handleLogin={handleLogin}
+                handleGuestLogin={handleGuestLogin}
+                switchToSignUp={() => setIsSignUp(true)}
+              />
+            ) : (
+              <SignUpForm
+                username={username}
+                email={email}
+                password={password}
+                confirmPassword={confirmPassword}
+                setUsername={setUsername}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                setConfirmPassword={setConfirmPassword}
+                isLoading={isLoading}
+                handleSignUp={handleSignUp}
+                switchToLogin={() => setIsSignUp(false)}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

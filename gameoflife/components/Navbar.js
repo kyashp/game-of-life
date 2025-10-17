@@ -1,3 +1,4 @@
+// component to render the navbar for each page
 "use client";
 
 import Link from 'next/link';
