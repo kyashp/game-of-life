@@ -7,8 +7,8 @@ import Help_popup from '../../../components/Help_popup';
 import Link from 'next/link';
 import LoginForm from '../../../components/Login';
 import SignUpForm from '../../../components/Sign_Up';
-// import { signUp, signIn } from '@/lib/authHelpers';
-// import { GuestStorageManager } from '@/utils/guestStorage';
+import { signUp, signIn } from '@/lib/authHelpers';
+import { GuestStorageManager } from '@/utils/guestStorage'; 
 
 export default function Landing() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -122,7 +122,7 @@ export default function Landing() {
           >
             <span>How to use Game of Life?</span>
             <span className="text-3xl leading-none flex items-center">»</span>
-          </button>
+          </button> 
 
           {/* Help Popup */}
           <Help_popup isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />

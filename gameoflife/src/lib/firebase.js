@@ -11,12 +11,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Debug: Log to check if env vars are loaded
+console.log('Firebase Config:', {
+  apiKey: firebaseConfig.apiKey ? 'Loaded' : 'Missing',
+  authDomain: firebaseConfig.authDomain ? 'Loaded' : 'Missing',
+  projectId: firebaseConfig.projectId ? 'Loaded' : 'Missing',
+});
+
 // Initialize Firebase (singleton pattern)
 let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized');
 } else {
   app = getApps()[0];
+  console.log('Firebase already initialized');
 }
 
 // Initialize services

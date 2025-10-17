@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "../../components/Navbar";
+import ConditionalNavbar from "../../components/ConditionalNavbar";
 import Logo from "../../components/Logo";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +25,8 @@ export default function RootLayout({ children }) {
         style={{ backgroundColor: '#fefcf3' }}
       >
         <Logo />
-        <Navbar />
+
+        <ConditionalNavbar />
         {children}
       </body>
     </html>

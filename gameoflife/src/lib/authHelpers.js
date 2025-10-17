@@ -9,22 +9,24 @@ import {
 import { auth } from './firebase';
 import { createUser } from './firestoreHelpers';
 
-// Sign Up
+// Sign Up - This saves to Firebase!
 export async function signUp(email, password, username) {
   try {
+    // 1. Create Firebase Authentication account
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Update display name
+    // 2. Update display name
     await updateProfile(user, {
       displayName: username
     });
     
-    // Create user document in Firestore
+    // 3. Create user document in Firestore
     await createUser(user.uid, {
       username,
       email,
-      displayName: username
+      displayName: username,
+      createdAt: new Date().toISOString()
     });
     
     return { success: true, user };
@@ -45,7 +47,7 @@ export async function signUp(email, password, username) {
   }
 }
 
-// Sign In
+// Sign In - This logs in using Firebase data!
 export async function signIn(email, password) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
