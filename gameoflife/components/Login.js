@@ -15,7 +15,7 @@ export default function LoginForm({
 }) {
   return (
     <form onSubmit={handleLogin}>
-      <h2 className="text-2xl font-semibold text-center mb-4 text-gray-700">Welcome!</h2>
+      <h2 className="text-2xl font-semibold text-center text-gray-700">Welcome!</h2>
 
       <input 
         type="email"

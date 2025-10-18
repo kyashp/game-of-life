@@ -4,6 +4,7 @@
 
 import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
+import Logo from './Logo';
 
 export default function ConditionalNavbar() {
   const pathname = usePathname();
@@ -13,10 +14,17 @@ export default function ConditionalNavbar() {
   const shouldHideNavbar = hideNavbarPaths.includes(pathname);
 
   if (shouldHideNavbar) {
-    return null;
+    return(
+    <div className="flex justify-center border-b-2 border-b-[#e5e7eb]">
+      <Logo/>
+    </div>);
   }
 
-  return <Navbar />;
+  return (
+    <>
+      <Logo/>
+      <Navbar />
+    </>);
 }
 
 

@@ -36,7 +36,7 @@ export default function UserAccount({ user }) {
 
   if (isLoading) {
     return (
-      <div className="bg-white shadow-lg border-2 border-gray-200 rounded-3xl p-8 max-w-sm w-full mx-auto">
+      <div className="bg-white shadow-lg border-2 border-gray-200 rounded-3xl max-w-sm w-full mx-auto">
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin text-5xl">⏳</div>
         </div>
@@ -50,7 +50,7 @@ export default function UserAccount({ user }) {
                   'U';
 
   return (
-    <div className="bg-white shadow-lg border-2 border-gray-200 rounded-3xl p-8 max-w-sm w-full mx-auto">
+    <div className="bg-white shadow-lg border-2 border-gray-200 rounded-3xl p-5 max-w-sm w-full mx-auto">
       
       {/* Header */}
       <h2 className="text-3xl font-bold text-center text-slate-800 mb-7">
@@ -85,29 +85,26 @@ export default function UserAccount({ user }) {
       </div>
 
       {/* Action Buttons */}
-      <div className="space-y-2 mb-6 flex ">
+      <div className="mb-6 gap-1 flex">
         <button
           onClick={() => router.push('/Profile_Page')}
-          className="flex-1 bg-blue-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-blue-600 shadow-md transition-all duration-200 hover:shadow-lg"
+          className="flex-1 bg-blue-500 text-white font-semibold rounded-xl px-6 py-2 hover:bg-blue-600 shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
         >
           Go to Profile
         </button>
 
         <button
           onClick={() => router.push('/Life_Sim_Page')}
-          className="flex-1 bg-green-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-green-600 shadow-md transition-all duration-200 hover:shadow-lg"
+          className="flex-1 bg-green-500 text-white font-semibold rounded-xl px-6 py-2 hover:bg-green-600 shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
         >
           Start Simulation
         </button>
       </div>
 
-      
-
-
       {/* Log Out Button */}
       <button 
         onClick={handleLogout}
-        className="w-full flex items-center justify-center gap-2 bg-gray-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-gray-600 shadow-md transition-all duration-200 hover:shadow-lg"
+        className="w-full flex items-center justify-center gap-2 bg-gray-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-gray-600 shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
       >
         <LogOut className="w-5 h-5" />
         Log Out

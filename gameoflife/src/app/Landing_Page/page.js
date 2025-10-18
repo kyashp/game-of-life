@@ -99,7 +99,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="flex bg-[#fefcf3] -mt-2">
+    <div className="flex bg-[#fefcf3]">
       {/* Left Section */}
       <div
         className="flex-1 flex flex-col items-center justify-center p-3"
@@ -144,7 +144,7 @@ export default function Landing() {
       </div>
 
       {/* Right Section - Login/Signup/User Account */}
-      <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-10 max-h-screen overflow-y-auto">
+      <div className="w-1/3 flex flex-col items-center justify-center p-8 pt-5 max-h-screen overflow-y-hidden">
         
         {authLoading ? (
           // Loading state

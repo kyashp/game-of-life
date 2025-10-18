@@ -16,7 +16,7 @@ export default function SignUpForm({
 }) {
   return (
     <form onSubmit={handleSignUp}>
-      <h2 className="text-2xl font-semibold text-center mb-4 text-gray-700">Create Account</h2>
+      <h2 className="text-2xl font-semibold text-center text-gray-700">Create Account</h2>
 
       <input 
         type="text"
