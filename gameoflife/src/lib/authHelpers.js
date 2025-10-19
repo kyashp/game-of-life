@@ -4,10 +4,14 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import { auth } from './firebase';
-import { createUser } from './firestoreHelpers';
+import { createUser, getUser } from './firestoreHelpers';
 
 // Sign Up - This saves to Firebase!
 export async function signUp(email, password, username) {
@@ -65,6 +69,93 @@ export async function signIn(email, password) {
       errorMessage = 'Invalid email address.';
     } else if (error.code === 'auth/invalid-credential') {
       errorMessage = 'Invalid email or password.';
+    }
+    
+    return { success: false, error: errorMessage };
+  }
+}
+
+// Google Sign In with Popup
+export async function signInWithGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    
+    // Optional: Add custom parameters
+    provider.setCustomParameters({
+      prompt: 'select_account' // Forces account selection even if user has one account
+    });
+
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Check if user document exists in Firestore
+    const userDoc = await getUser(user.uid);
+    
+    // If user doesn't exist in Firestore, create document
+    if (!userDoc.success) {
+      await createUser(user.uid, {
+        username: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        provider: 'google',
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    return { success: true, user, isNewUser: !userDoc.success };
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    
+    let errorMessage = error.message;
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Sign-in popup was closed. Please try again.';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup was blocked by your browser. Please allow popups and try again.';
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      errorMessage = 'Sign-in was cancelled. Please try again.';
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      errorMessage = 'An account already exists with this email using a different sign-in method.';
+    }
+    
+    return { success: false, error: errorMessage };
+  }
+}
+
+
+// Get Google Redirect Result (Call this on page load)
+export async function getGoogleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    
+    if (result) {
+      const user = result.user;
+      
+      // Check if user document exists in Firestore
+      const userDoc = await getUser(user.uid);
+      
+      // If user doesn't exist in Firestore, create document
+      if (!userDoc.success) {
+        await createUser(user.uid, {
+          username: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          provider: 'google',
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      return { success: true, user, isNewUser: !userDoc.success };
+    }
+    
+    return { success: false, error: 'No redirect result found' };
+  } catch (error) {
+    console.error('Get redirect result error:', error);
+    
+    let errorMessage = error.message;
+    if (error.code === 'auth/account-exists-with-different-credential') {
+      errorMessage = 'An account already exists with this email using a different sign-in method.';
     }
     
     return { success: false, error: errorMessage };

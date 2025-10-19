@@ -91,6 +91,29 @@ export default function Landing() {
     }
   };
 
+  // Handle Google Login
+  const handleGoogleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const result = await signInWithGoogle();
+
+      if (result.success) {
+        // User state will update automatically via onAuthChange
+        alert('Login successful!');
+        } else {
+          alert(`Login failed: ${result.error}`);
+        }
+      } catch (error) {
+        console.error('Google Login error:', error);
+        alert('An error occurred during Google login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+
+
   // Handle Guest Login
   const handleGuestLogin = () => {
     const guestId = GuestStorageManager.initGuestSession();
@@ -150,7 +173,7 @@ export default function Landing() {
           // Loading state
           <div className="bg-white px-8 pt-8 pb-6 rounded-3xl shadow-lg border border-black w-full max-w-sm flex items-center justify-center h-96">
             <div className="text-center">
-              <div className="animate-spin text-5xl mb-4">⏳</div>
+              <div className='animate-spin text-5xl'> <></> </div>
               <p className="text-gray-600">Loading...</p>
             </div>
           </div>
@@ -168,6 +191,7 @@ export default function Landing() {
                 setPassword={setPassword}
                 isLoading={isLoading}
                 handleLogin={handleLogin}
+                handleGoogleLogin={handleGoogleLogin}
                 handleGuestLogin={handleGuestLogin}
                 switchToSignUp={() => setIsSignUp(true)}
               />

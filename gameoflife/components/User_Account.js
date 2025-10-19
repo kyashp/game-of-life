@@ -38,7 +38,7 @@ export default function UserAccount({ user }) {
     return (
       <div className="bg-white shadow-lg border-2 border-gray-200 rounded-3xl max-w-sm w-full mx-auto">
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin text-5xl">⏳</div>
+          <div className=" text-2xl">Loading...</div>
         </div>
       </div>
     );

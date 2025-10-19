@@ -1,7 +1,11 @@
 // Login form component
 'use client';
 
+import { signInWithPopup } from 'firebase/auth';
+import { useState } from 'react';
 import Image from 'next/image';
+import ForgotPassword from './ForgotPassword';
+import { signInWithGoogle } from '@/lib/authHelpers';
 
 export default function LoginForm({
   email,
@@ -13,81 +17,135 @@ export default function LoginForm({
   handleGuestLogin,
   switchToSignUp,
 }) {
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    
+    try {
+      const result = await signInWithGoogle();
+      
+      if (result.success) {
+        console.log('Google sign-in successful:', result.user);
+        // User state will update automatically via onAuthChange
+        if (result.isNewUser) {
+          alert('Welcome! Your account has been created.');
+        } else {
+          alert('Welcome back!');
+        }
+      } else {
+        alert(`Google sign-in failed: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      alert('An error occurred during Google sign-in');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
-    <form onSubmit={handleLogin}>
-      <h2 className="text-2xl font-semibold text-center text-gray-700">Welcome!</h2>
+    <>
+      <form onSubmit={handleLogin}>
+        <h2 className="text-2xl font-semibold text-center mb-4 text-gray-700">
+          Welcome!
+        </h2>
 
-      <input 
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border border-black focus:outline-none focus:bg-gray-100"
-      />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+        />
 
-      <input 
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border border-black focus:outline-none focus:bg-gray-100"
-      />
-      
-      <p>
-        <a href="#" className="text-blue-500 hover:text-blue-600 font-medium flex justify-end mb-1 hover:underline">
-          Forgot Password?
-        </a>
-      </p>
-      
-      <button 
-        type="submit"
-        disabled={isLoading}
-        className="w-full px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
-      >
-        {isLoading ? 'Logging in...' : 'Login'}
-      </button>
-      
-      <div className="mt-4 text-center">
-        <span className="text-gray-500">Don&apos;t have an account? </span>
-        <button 
-          type="button"
-          onClick={switchToSignUp}
-          className="text-blue-500 hover:underline font-medium cursor-pointer"
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full mb-4 px-6 py-3 bg-[#ffffff] text-gray-700 rounded-full hover:bg-gray-300 transition-colors border-2 border-black focus:outline-none focus:bg-gray-100"
+        />
+
+        {/* Forgot Password Link */}
+        <p className='text-right mb-1'>
+          <button
+            type="button"
+            onClick={() => setIsForgotPasswordOpen(true)}
+            className="text-blue-500 hover:text-blue-600 font-medium hover:underline cursor-pointer"
+          >
+            Forgot Password?
+          </button>
+        </p>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors disabled:opacity-50 cursor-pointer"
         >
-          Sign Up
+          {isLoading ? 'Logging in...' : 'Login'}
         </button>
-      </div>
-        
-      <div className="flex items-center mt-4 mb-2">
-        <div className="flex-1 border-b border-gray-300"></div>
-        <span className="px-4 text-gray-500">or</span>
-        <div className="flex-1 border-b border-gray-300"></div>
-      </div>
 
-      <div className="flex justify-center">
-        <button className="px-3 py-2 bg-white text-black border rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer">
-          <Image src="/Google-logo.png" alt="Google Logo" width={50} height={50}/>
-          Sign in with Google
-        </button>
-      </div>
+        <div className="mt-4 text-center">
+          <span className="text-gray-500">Don&apos;t have an account? </span>
+          <button
+            type="button"
+            onClick={switchToSignUp}
+            className="text-blue-500 hover:underline font-medium cursor-pointer"
+          >
+            Sign Up
+          </button>
+        </div>
 
-      <div className="flex items-center mt-4 mb-2">
-        <div className="flex-1 border-b border-gray-300"></div>
-        <span className="px-4 text-gray-500">or</span>
-        <div className="flex-1 border-b border-gray-300"></div>
-      </div>
+        <div className="flex items-center mt-4 mb-2">
+          <div className="flex-1 border-b border-gray-300"></div>
+          <span className="px-4 text-gray-500">or</span>
+          <div className="flex-1 border-b border-gray-300"></div>
+        </div>
 
-      <div className="flex justify-center mt-2">
-        <button 
-          type="button"
-          onClick={handleGuestLogin}
-          className="px-6 py-3 text-blue-600 hover:underline cursor-pointer"
-        >
-          Play as Guest
-        </button>
-      </div>
-    </form>
+        {/* Google Sign In Button */}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isGoogleLoading}
+            className="px-3 py-2 bg-white text-black border-2 border-gray-300 rounded-full hover:bg-gray-50 hover:border-blue-500 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Image
+              src="/Google-logo.png"
+              alt="Google Logo"
+              width={50}
+              height={50}
+            />
+            {isGoogleLoading ? 'Signing in...' : 'Sign in with Google'}
+          </button>
+        </div>
+
+        <div className="flex items-center mt-4 mb-2">
+          <div className="flex-1 border-b border-gray-300"></div>
+          <span className="px-4 text-gray-500">or</span>
+          <div className="flex-1 border-b border-gray-300"></div>
+        </div>
+
+        <div className="flex justify-center mt-2 mb-4">
+          <button
+            type="button"
+            onClick={handleGuestLogin}
+            className="px-6 py-3 bg-null text-blue-600 hover:underline cursor-pointer"
+          >
+            Play as Guest
+          </button>
+        </div>
+      </form>
+
+      {/* Forgot Password Popup */}
+      <ForgotPassword
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      />
+    </>
   );
 }
