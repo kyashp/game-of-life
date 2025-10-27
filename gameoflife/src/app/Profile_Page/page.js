@@ -53,7 +53,7 @@ label{
     margin-bottom: 5px;
     font-size: 0.9em;
 }
-input, select{
+select{
     padding: 10px 12px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -66,6 +66,14 @@ input, select{
     background-size: 14px;
     appearance: none;
     -webkit-appearance: none;
+}
+input{
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1em;
+    background-color: #fff;
+    color: #333;
 }
 .actions{
     grid-column: 1 / -1; /* Span all columns */
@@ -219,10 +227,25 @@ export default function Profile() {
         return;
       }
       if(value!==null && (value<min || value>max || isNaN(value))){ //If field has value and is out of range or not a number
-      newErrors[field]=`${fieldName} must be between ${min} and ${max} SGD.`;
-      isValid=false;
+        newErrors[field]=`${fieldName} must be between ${min} and ${max} SGD.`;
+        isValid=false;
       }
     };
+    /*const checkIncome=()=>{
+      if(profileData.Household_Income_Type==='Single'){ 
+        //set lower income to 0 in backend, dont modify UI field cos it will be rejected by checkNumericRange() function
+        if(profileData.Father_Gross_Monthly_Income>profileData.Mother_Gross_Monthly_Income){
+          profileData.Mother_Gross_Monthly_Income=0;
+        } else if (profileData.Father_Gross_Monthly_Income<profileData.Mother_Gross_Monthly_Income){
+          profileData.Father_Gross_Monthly_Income=0;
+        } else {
+          //if both are equal
+          newErrors.Household_Income_Type='For Single Income Type, parents cannot have equal income. '
+        };
+      }
+    }*/  
+
+  
     //Check required text fields
     checkRequired('Father_Residency', 'Father Residency');
     checkRequired('Mother_Residency', 'Mother Residency');
@@ -234,6 +257,9 @@ export default function Profile() {
     //Check required numeric fields
     checkNumericRange('Father_Gross_Monthly_Income', 'Father Gross Monthly Income', incomeRange.min, incomeRange.max, false);
     checkNumericRange('Mother_Gross_Monthly_Income', 'Mother Gross Monthly Income', incomeRange.min, incomeRange.max, false);
+
+    //Check income type
+    //checkIncome();
 
     //Check optional numeric fields
     checkNumericRange('Father_Disposable_Income', 'Monthly Disposable Income (Father)', incomeRange.min, incomeRange.max, true);
@@ -383,7 +409,7 @@ export default function Profile() {
               type="text"
               value={profileData.Child_Name}
               onChange={handleChange}
-              error={errors.Household_Income_Type}
+              error={errors.Child_Name}
               placeholder="Enter Child's Name"
             />
             <FormGroup
