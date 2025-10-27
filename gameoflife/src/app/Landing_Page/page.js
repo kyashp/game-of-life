@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Help_popup from '../../../components/Help_popup';
+import Help_popup from '../../components/Help_popup';
 import Link from 'next/link';
-import LoginForm from '../../../components/Login';
-import SignUpForm from '../../../components/Sign_Up';
-import UserAccount from '../../../components/User_Account';
+import LoginForm from '../../components/Login';
+import SignUpForm from '../../components/Sign_Up';
+import UserAccount from '../../components/User_Account';
 import { signUp, signIn, onAuthChange } from '@/lib/authHelpers';
 import { GuestStorageManager } from '@/utils/guestStorage';
 

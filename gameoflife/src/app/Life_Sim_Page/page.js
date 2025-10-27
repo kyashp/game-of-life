@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import LifeSim from '../../../components/LifeSim';
-import LifeSimDashboard from '../../../components/LifeSimDashboard';
+import LifeSim from '../../components/LifeSim';
+import LifeSimDashboard from '../../components/LifeSimDashboard';
 
 export default function LifeSimPage() {
   const [simulationData, setSimulationData] = useState(null);
