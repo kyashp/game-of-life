@@ -28,7 +28,7 @@ export class GuestStorageManager {
     sessionStorage.setItem(this.KEYS.GUEST_MODE, 'true');
     sessionStorage.setItem(this.KEYS.SESSION_START, new Date().toISOString());
     
-    console.log('✅ Guest session initialized:', guestId);
+    console.log(' Guest session initialized:', guestId);
     return guestId;
   }
 

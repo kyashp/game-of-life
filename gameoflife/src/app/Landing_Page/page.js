@@ -91,34 +91,46 @@ export default function Landing() {
     }
   };
 
-  // Handle Google Login
-  const handleGoogleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const result = await signInWithGoogle();
+  // // Handle Google Login (previous version)
+  // const handleGoogleLogin = async (e) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await signInWithGoogle();
 
-      if (result.success) {
-        // User state will update automatically via onAuthChange
-        alert('Login successful!');
-        } else {
-          alert(`Login failed: ${result.error}`);
-        }
-      } catch (error) {
-        console.error('Google Login error:', error);
-        alert('An error occurred during Google login');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //     if (result.success) {
+  //       // User state will update automatically via onAuthChange
+  //       alert('Login successful!');
+  //       } else {
+  //         alert(`Login failed: ${result.error}`);
+  //       }
+  //     } catch (error) {
+  //       console.error('Google Login error:', error);
+  //       alert('An error occurred during Google login');
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
 
 
   // Handle Guest Login
   const handleGuestLogin = () => {
-    const guestId = GuestStorageManager.initGuestSession();
-    console.log('Guest session created:', guestId);
-    router.push('/Profile_Page?mode=guest');
+    try{
+        // Initialize guest session
+        const guestId = GuestStorageManager.initGuestSession();
+        console.log('Guest session created:', guestId);
+
+        // show confirmation
+        alert('Guest session started! Your progress will not be saved after you leave.');
+
+        // Redirect to Profile Page in guest mode
+        router.push('/Profile_Page?mode=guest');
+    } catch (error) {
+        console.error('Guest Login error:', error);
+        alert('Failed to start guest session. Please try again.');
+    }
+    
   };
 
   return (
@@ -191,7 +203,7 @@ export default function Landing() {
                 setPassword={setPassword}
                 isLoading={isLoading}
                 handleLogin={handleLogin}
-                handleGoogleLogin={handleGoogleLogin}
+                //handleGoogleLogin={handleGoogleLogin} - alr done in Login.js
                 handleGuestLogin={handleGuestLogin}
                 switchToSignUp={() => setIsSignUp(true)}
               />

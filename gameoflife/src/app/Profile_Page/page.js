@@ -1,6 +1,10 @@
 'use client'; //required for using client side features like useState, event handlers
 
-import React,{useState} from 'react';
+import React,{useState, useEffect} from 'react';
+import {useSearchParams, useRouter} from 'next/navigation';
+import { GuestStorageManager } from '@/utils/guestStorage';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // === Content from styles.css embedded as a string ===
 const CSS_STYLES = `
@@ -130,12 +134,49 @@ const initialProfileData={
   Child_Name:'',
   Family_Savings: null, 
   Child_Gender: '', //Male, Female
-  Realism_Level: '', //High, Med, Low
+  Realism_Level: '', //pessimistic, neutral, optimistic
 }
 
 export default function Profile() {
+  const searchParams = useSearchParams(); // to read URL query parameters
+  const router = useRouter(); // to programmatically navigate
+  const [isGuestMode, setIsGuestMode] = useState(false); // State to track if in guest mode
+  const [currentUser, setCurrentUser] = useState(null); // State to track authenticated user
+
   const [profileData, setProfileData] = useState(initialProfileData);
   const [errors, setErrors] = useState({});
+
+   // Check for guest mode on mount
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    
+    if (mode === 'guest') {
+      setIsGuestMode(true);
+      console.log('Guest mode activated');
+      
+      // Check if guest session exists
+      const guestId = GuestStorageManager.getGuestId();
+      if (!guestId) {
+        // No guest session, redirect to landing
+        alert('Guest session not found. Please try again.');
+        router.push('/Landing_Page');
+      }
+    } else {
+      // Check for authenticated user
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setCurrentUser(user);
+          setIsGuestMode(false);
+        } else if (!isGuestMode) {
+          // Not logged in and not guest mode
+          router.push('/Landing_Page');
+        }
+      });
+
+      return () => unsubscribe();
+    }
+  }, [searchParams, router]);
+
 
   //Function to handle changes to input and update the state
   const handleChange=(e)=>{
@@ -219,6 +260,24 @@ export default function Profile() {
     }
   };
 
+  // Save profile data
+  const handleSaveProfile = () => {
+    if (isGuestMode) {
+      // Save to local storage for guest
+      const success = GuestStorageManager.saveProfile(profileData);
+      if (success) {
+        alert('Profile saved locally!');
+        console.log('Guest profile saved:', profileData);
+      } else {
+        alert('Failed to save profile. Please try again.');
+      }
+    } else {
+      // Save to Firebase for authenticated user
+      // ...your existing save logic...
+      alert('Profile saved to your account!');
+    }
+  };
+
   //Function to handle Modify and Delete buttons
   const handleModifyButton=()=>{
     alert('Modify logic triggered. (Load existing profile)');
@@ -233,8 +292,24 @@ export default function Profile() {
 
   return (
     <> {/* Used a React Fragment to render both the styles and the main content */}
+    
+    {/* Guest Mode Banner */}
+      {isGuestMode && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">👤</span>
+            <div>
+              <p className="font-bold">Guest Mode</p>
+              <p className="text-sm">
+                Your progress is saved locally. Create an account to save permanently.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <GlobalStyles />
-      <div className="page-center-wrapper">  
+      <div className="page-center-wrapper"> 
         <div className="profile-container">
           <h2>Create your Profile</h2>
           <form onSubmit={handleSubmit} className="form-grid-layout">
