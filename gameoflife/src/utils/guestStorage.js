@@ -1,7 +1,7 @@
 /**
  * Guest Storage Manager
- * Handles all SessionStorage operations for guest users
- * Data is automatically deleted when browser tab/window is closed
+ * Handles all localStorage operations for guest users
+ * Data persists even after browser is closed
  */
 
 export class GuestStorageManager {
@@ -24,11 +24,11 @@ export class GuestStorageManager {
   static initGuestSession() {
     const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
-    sessionStorage.setItem(this.KEYS.GUEST_ID, guestId);
-    sessionStorage.setItem(this.KEYS.GUEST_MODE, 'true');
-    sessionStorage.setItem(this.KEYS.SESSION_START, new Date().toISOString());
+    localStorage.setItem(this.KEYS.GUEST_ID, guestId); 
+    localStorage.setItem(this.KEYS.GUEST_MODE, 'true'); 
+    localStorage.setItem(this.KEYS.SESSION_START, new Date().toISOString()); 
     
-    console.log(' Guest session initialized:', guestId);
+    console.log('👤 Guest session initialized:', guestId);
     return guestId;
   }
 
@@ -37,7 +37,7 @@ export class GuestStorageManager {
    * @returns {boolean}
    */
   static isGuest() {
-    return sessionStorage.getItem(this.KEYS.GUEST_MODE) === 'true';
+    return localStorage.getItem(this.KEYS.GUEST_MODE) === 'true';
   }
 
   /**
@@ -45,7 +45,7 @@ export class GuestStorageManager {
    * @returns {string|null}
    */
   static getGuestId() {
-    return sessionStorage.getItem(this.KEYS.GUEST_ID);
+    return localStorage.getItem(this.KEYS.GUEST_ID); 
   }
 
   /**
@@ -59,7 +59,7 @@ export class GuestStorageManager {
 
     return {
       guestId: this.getGuestId(),
-      sessionStart: sessionStorage.getItem(this.KEYS.SESSION_START),
+      sessionStart: localStorage.getItem(this.KEYS.SESSION_START), // ✅ Changed
       hasProfile: this.hasProfile(),
       simulationCount: this.getSimulations().length
     };
@@ -80,7 +80,7 @@ export class GuestStorageManager {
         guestId: this.getGuestId()
       };
       
-      sessionStorage.setItem(this.KEYS.GUEST_PROFILE, JSON.stringify(profile));
+      localStorage.setItem(this.KEYS.GUEST_PROFILE, JSON.stringify(profile)); // ✅ Changed
       console.log('✅ Guest profile saved:', profile);
       return true;
     } catch (error) {
@@ -95,7 +95,7 @@ export class GuestStorageManager {
    */
   static getProfile() {
     try {
-      const profile = sessionStorage.getItem(this.KEYS.GUEST_PROFILE);
+      const profile = localStorage.getItem(this.KEYS.GUEST_PROFILE); // ✅ Changed
       return profile ? JSON.parse(profile) : null;
     } catch (error) {
       console.error('❌ Error getting guest profile:', error);
@@ -117,7 +117,7 @@ export class GuestStorageManager {
         updatedAt: new Date().toISOString()
       };
       
-      sessionStorage.setItem(this.KEYS.GUEST_PROFILE, JSON.stringify(updatedProfile));
+      localStorage.setItem(this.KEYS.GUEST_PROFILE, JSON.stringify(updatedProfile)); // ✅ Changed
       console.log('✅ Guest profile updated');
       return true;
     } catch (error) {
@@ -131,14 +131,14 @@ export class GuestStorageManager {
    * @returns {boolean}
    */
   static hasProfile() {
-    return sessionStorage.getItem(this.KEYS.GUEST_PROFILE) !== null;
+    return localStorage.getItem(this.KEYS.GUEST_PROFILE) !== null; // ✅ Changed
   }
 
   /**
    * Clear guest profile
    */
   static clearProfile() {
-    sessionStorage.removeItem(this.KEYS.GUEST_PROFILE);
+    localStorage.removeItem(this.KEYS.GUEST_PROFILE); // ✅ Changed
     console.log('✅ Guest profile cleared');
   }
 
@@ -161,7 +161,7 @@ export class GuestStorageManager {
       };
       
       simulations.push(newSimulation);
-      sessionStorage.setItem(this.KEYS.GUEST_SIMULATIONS, JSON.stringify(simulations));
+      localStorage.setItem(this.KEYS.GUEST_SIMULATIONS, JSON.stringify(simulations)); // ✅ Changed
       
       console.log('✅ Simulation saved:', newSimulation.id);
       return true;
@@ -177,7 +177,7 @@ export class GuestStorageManager {
    */
   static getSimulations() {
     try {
-      const simulations = sessionStorage.getItem(this.KEYS.GUEST_SIMULATIONS);
+      const simulations = localStorage.getItem(this.KEYS.GUEST_SIMULATIONS); // ✅ Changed
       return simulations ? JSON.parse(simulations) : [];
     } catch (error) {
       console.error('❌ Error getting simulations:', error);
@@ -205,7 +205,7 @@ export class GuestStorageManager {
       const simulations = this.getSimulations();
       const filtered = simulations.filter(sim => sim.id !== simulationId);
       
-      sessionStorage.setItem(this.KEYS.GUEST_SIMULATIONS, JSON.stringify(filtered));
+      localStorage.setItem(this.KEYS.GUEST_SIMULATIONS, JSON.stringify(filtered)); // ✅ Changed
       console.log('✅ Simulation deleted:', simulationId);
       return true;
     } catch (error) {
@@ -218,7 +218,7 @@ export class GuestStorageManager {
    * Clear all simulations
    */
   static clearSimulations() {
-    sessionStorage.removeItem(this.KEYS.GUEST_SIMULATIONS);
+    localStorage.removeItem(this.KEYS.GUEST_SIMULATIONS); // ✅ Changed
     console.log('✅ All simulations cleared');
   }
 
@@ -237,7 +237,7 @@ export class GuestStorageManager {
         guestId: this.getGuestId()
       };
       
-      sessionStorage.setItem(this.KEYS.GUEST_INSIGHTS, JSON.stringify(insights));
+      localStorage.setItem(this.KEYS.GUEST_INSIGHTS, JSON.stringify(insights)); // ✅ Changed
       console.log('✅ Insights saved');
       return true;
     } catch (error) {
@@ -252,7 +252,7 @@ export class GuestStorageManager {
    */
   static getInsights() {
     try {
-      const insights = sessionStorage.getItem(this.KEYS.GUEST_INSIGHTS);
+      const insights = localStorage.getItem(this.KEYS.GUEST_INSIGHTS); // ✅ Changed
       return insights ? JSON.parse(insights) : null;
     } catch (error) {
       console.error('❌ Error getting insights:', error);
@@ -264,7 +264,7 @@ export class GuestStorageManager {
    * Clear insights
    */
   static clearInsights() {
-    sessionStorage.removeItem(this.KEYS.GUEST_INSIGHTS);
+    localStorage.removeItem(this.KEYS.GUEST_INSIGHTS); // ✅ Changed
     console.log('✅ Insights cleared');
   }
 
@@ -275,7 +275,7 @@ export class GuestStorageManager {
    */
   static clearAllData() {
     Object.values(this.KEYS).forEach(key => {
-      sessionStorage.removeItem(key);
+      localStorage.removeItem(key); // ✅ Changed
     });
     console.log('✅ All guest data cleared');
   }
@@ -312,7 +312,7 @@ export class GuestStorageManager {
     let totalSize = 0;
     
     Object.values(this.KEYS).forEach(key => {
-      const item = sessionStorage.getItem(key);
+      const item = localStorage.getItem(key); // ✅ Changed
       if (item) {
         totalSize += item.length;
       }
@@ -320,7 +320,7 @@ export class GuestStorageManager {
 
     return {
       totalKeys: Object.values(this.KEYS).filter(key => 
-        sessionStorage.getItem(key) !== null
+        localStorage.getItem(key) !== null // ✅ Changed
       ).length,
       totalSize: totalSize,
       totalSizeKB: (totalSize / 1024).toFixed(2),
@@ -335,17 +335,17 @@ export class GuestStorageManager {
   // ============ HELPER METHODS ============
 
   /**
-   * Check if SessionStorage is available
+   * Check if localStorage is available
    * @returns {boolean}
    */
   static isStorageAvailable() {
     try {
       const test = '__storage_test__';
-      sessionStorage.setItem(test, test);
-      sessionStorage.removeItem(test);
+      localStorage.setItem(test, test); // ✅ Changed
+      localStorage.removeItem(test); // ✅ Changed
       return true;
     } catch (error) {
-      console.error('SessionStorage not available:', error);
+      console.error('localStorage not available:', error); // ✅ Changed comment
       return false;
     }
   }

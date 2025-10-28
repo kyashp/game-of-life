@@ -327,7 +327,7 @@ export default function Profile() {
             <div>
               <p className="font-bold">Guest Mode</p>
               <p className="text-sm">
-                Your progress is saved locally. Create an account to save permanently.
+                Your progress is saved locally. Create an account to save permanently. Go back to Login page to exit Guest Mode.
               </p>
             </div>
           </div>
@@ -445,7 +445,7 @@ export default function Profile() {
 
             {/* Buttons */}
             <div className="button-group">
-              <button type="submit" className="save-button">Save</button>
+              <button type="submit" className="save-button" onClick={handleSaveProfile}>Save</button>
               <button type="button" className="modify-button" onClick={handleModifyButton}>Modify</button>
               <button type="button" className="delete-button" onClick={handleDeleteButton}>Delete</button>
             </div>
