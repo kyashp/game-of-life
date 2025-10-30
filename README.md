@@ -176,6 +176,77 @@ Database (Firebase) - Permanent
 - [ ] All features work on deployed Vercel app
 
 
+### Things we need to try & settle by TMR: 
+
+1. Standardise the flow of the Web App :
+- interaction between pages 
+- purpose and implementation of LifeSim & Insights
+- Idea of Realism 
+- tax calculator & other classes deem if necessary
+
+
+2. Code of the Web App (by pages) : 
+- Frontend done, now mostly backend left 
+
+# (Landing Page)
+- Settle Authentication & security (lower priority, need meet functionality first)
+- Add guest mode to User account component 
+- Settle some bugs to go to different pages 
+
+
+# (Profile Page)
+- Create & Link Firebase storage for profile data (Authorised user mode)
+- Create & Link Local Storage for Profile data (guest mode)
+
+# (LifeSim Page)
+- Finalise what APIs we are going to use 
+- Animation of the Child's life: 
+- Implement the APIs and Dashboard 
+
+(starts here) Newborn --> Kindergarten --> Pri Sch --> Sec Sch --> JC --->  Uni --> Adult (stops here)
+                                                                --> Poly -/--^
+
+- Implement Export as CSV/ PDF Logic (for both guests & Users)-- or maybe only for Users ? 
+
+
+
+# (Insights Page)
+- Finalise the logic to get the Median value 
+- Use Dashboard component to show results 
+
+
+
+3. Diagrams :
+- Use Case
+- Class 
+- Sequence 
+- Dialog Map 
+- System Architecture 
+
+
+4. Presentation Slides : 
+- flow of slides 
+- Presentation time is 13-15 Mins so split evenly 
+
+- Evaluation Criteria from Github: 
+    - framework
+    - quality
+    - diversity
+    - completeness
+    - novelty
+    - Usefulness 
+    - presentation quality 
+
+- Good SWE practices & system design incorporated into our project 
+
+5. May not need but best to have: 
+(from lab4&5 handout)
+- Test cases & Testing Results (black box & white box testing techniques)
+- Demo Script 
+- Key public classes 
+- test one important control classes 
+
+
 
 
 
