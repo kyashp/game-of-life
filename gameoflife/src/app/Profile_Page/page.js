@@ -3,8 +3,22 @@
 import React,{useState, useEffect} from 'react';
 import {useSearchParams, useRouter} from 'next/navigation';
 import { GuestStorageManager } from '@/utils/guestStorage';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { 
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  deleteDoc,
+  Timestamp 
+} from 'firebase/firestore';
+
 
 // === Content from styles.css embedded as a string ===
 const CSS_STYLES = `
@@ -150,7 +164,8 @@ export default function Profile() {
   const router = useRouter(); // to programmatically navigate
   const [isGuestMode, setIsGuestMode] = useState(false); // State to track if in guest mode
   const [currentUser, setCurrentUser] = useState(null); // State to track authenticated user
-
+  const [userProfileLoaded, setUserProfileLoaded] = useState(false); // to track if there has been an attempt to load user profile
+  const [currentProfileId, setCurrentProfileId] = useState(null);
   const [profileData, setProfileData] = useState(initialProfileData);
   const [errors, setErrors] = useState({});
 
@@ -172,13 +187,38 @@ export default function Profile() {
     } else {
       // Check for authenticated user
       const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          setCurrentUser(user);
-          setIsGuestMode(false);
-        } else if (!isGuestMode) {
-          // Not logged in and not guest mode
-          router.push('/Landing_Page');
-        }
+        const loadUserProfile = async() => {
+          if (user) {
+            setCurrentUser(user);
+            setIsGuestMode(false);
+            try{
+              const profilesCollectionRef = collection(db, 'profiles'); //Get collection reference
+              const q = query(profilesCollectionRef, where('userId', '==', user.uid));
+              const querySnapshot = await getDocs(q);
+              
+              if (!querySnapshot.empty){
+                const loadedProfileDoc = querySnapshot.docs[0]; //Assuming 1 profile per user
+                const loadedProfileData = {id: loadedProfileDoc.id, ...loadedProfileDoc.data() };
+                setProfileData(loadedProfileData);
+                setCurrentProfileId(loadedProfileDoc.id);
+                console.log('Loaded existing profile:', loadedProfileData);
+              } else {
+                setProfileData(initialProfileData);
+                setCurrentProfileId(null);
+                console.log('No existing profile found.');
+              }
+            } catch (error) {
+              console.error("Error loading user profile:", error);
+              alert('Failed to load profile. Please try again.');
+            } finally {
+              setUserProfileLoaded(true);
+            }
+          } else if (!isGuestMode) {
+            // Not logged in and not guest mode
+            router.push('/Landing_Page');
+          }
+        };
+        loadUserProfile();
       });
 
       return () => unsubscribe();
@@ -207,9 +247,12 @@ export default function Profile() {
   const ValidateProfileData=()=>{
     const newErrors={};
     let isValid=true;
+
     //Define acceptable numeric ranges
-    const incomeRange={min: 1000, max: 50000};
+    const minIncomeRequired=1000
+    const incomeRange={min: minIncomeRequired, max: 50000};
     const savingsRange={min: 10000, max: 100000};
+    const isSingleIncome=profileData.Household_Income_Type === 'Single';
 
     //Helper function to check required fields are not empty
     const checkRequired=(field, fieldName)=>{
@@ -221,30 +264,18 @@ export default function Profile() {
     //Helper function to check numeric fields are within range
     const checkNumericRange=(field, fieldName, min, max, isOptional=false)=>{
       const value=profileData[field];
-      if(!isOptional && !value){ //If field is required and empty
-        newErrors[field]=`${fieldName} is required.`;
-        isValid=false;
-        return;
+      if (value===null || value === undefined || value ===''){
+        if(!isOptional){ //If field is required and empty
+          newErrors[field]=`${fieldName} is required.`;
+          isValid=false;
+          return;
+        }
       }
-      if(value!==null && (value<min || value>max || isNaN(value))){ //If field has value and is out of range or not a number
-        newErrors[field]=`${fieldName} must be between ${min} and ${max} SGD.`;
+      if(value!=null&&(value<min || value>max || isNaN(value))){ //If field has value and is out of range or not a number
+        newErrors[field]=`${fieldName} must be between ${min.toLocaleString()} and ${max.toLocaleString()} SGD.`;
         isValid=false;
       }
     };
-    /*const checkIncome=()=>{
-      if(profileData.Household_Income_Type==='Single'){ 
-        //set lower income to 0 in backend, dont modify UI field cos it will be rejected by checkNumericRange() function
-        if(profileData.Father_Gross_Monthly_Income>profileData.Mother_Gross_Monthly_Income){
-          profileData.Mother_Gross_Monthly_Income=0;
-        } else if (profileData.Father_Gross_Monthly_Income<profileData.Mother_Gross_Monthly_Income){
-          profileData.Father_Gross_Monthly_Income=0;
-        } else {
-          //if both are equal
-          newErrors.Household_Income_Type='For Single Income Type, parents cannot have equal income. '
-        };
-      }
-    }*/  
-
   
     //Check required text fields
     checkRequired('Father_Residency', 'Father Residency');
@@ -255,15 +286,39 @@ export default function Profile() {
     checkRequired('Realism_Level', 'Realism Level');
 
     //Check required numeric fields
-    checkNumericRange('Father_Gross_Monthly_Income', 'Father Gross Monthly Income', incomeRange.min, incomeRange.max, false);
-    checkNumericRange('Mother_Gross_Monthly_Income', 'Mother Gross Monthly Income', incomeRange.min, incomeRange.max, false);
+    let fatherIncomeMin = isSingleIncome? 0 : minIncomeRequired;
+    let motherIncomeMin = isSingleIncome? 0 : minIncomeRequired;
+
+    checkNumericRange('Father_Gross_Monthly_Income', 'Father Gross Monthly Income', fatherIncomeMin, incomeRange.max, false);
+    checkNumericRange('Mother_Gross_Monthly_Income', 'Mother Gross Monthly Income', motherIncomeMin, incomeRange.max, false);
 
     //Check income type
-    //checkIncome();
+    if (isSingleIncome) {
+      // Check to ensure total household income is >=$1000
+      const fatherIncome = profileData.Father_Gross_Monthly_Income || 0;
+      const motherIncome = profileData.Mother_Gross_Monthly_Income || 0;
+      const combinedIncome = fatherIncome + motherIncome;
+
+      const zeroIncomeCount = (fatherIncome === 0 ? 1 : 0) + (motherIncome === 0 ? 1 : 0);
+        if (zeroIncomeCount !== 1) {
+            const errorMsg = "For 'Single' household income, EXACTLY one parent's Gross Monthly Income must be 0 SGD, and the other must be non-zero (i.e. the working parent).";
+            
+            // Set error on both fields if the structural rule is violated.
+            newErrors['Father_Gross_Monthly_Income'] = newErrors['Father_Gross_Monthly_Income'] || errorMsg;
+            newErrors['Mother_Gross_Monthly_Income'] = newErrors['Mother_Gross_Monthly_Income'] || errorMsg;
+            isValid = false;
+        }
+
+      if(combinedIncome < minIncomeRequired){
+        newErrors['Father_Gross_Monthly_Income'] = `For single income households, the combined Gross Monthly Income must be at least ${minIncomeRequired.toLocaleString()} SGD`;
+        newErrors['Mother_Gross_Monthly_Income'] = `For single income households, the combined Gross Monthly Income must be at least ${minIncomeRequired.toLocaleString()} SGD`;
+        isValid = false;
+      }
+    }
 
     //Check optional numeric fields
-    checkNumericRange('Father_Disposable_Income', 'Monthly Disposable Income (Father)', incomeRange.min, incomeRange.max, true);
-    checkNumericRange('Mother_Disposable_Income', 'Monthly Disposable Income (Mother)', incomeRange.min, incomeRange.max, true);
+    checkNumericRange('Father_Disposable_Income', 'Monthly Disposable Income (Father)', 0, incomeRange.max, true);
+    checkNumericRange('Mother_Disposable_Income', 'Monthly Disposable Income (Mother)', 0, incomeRange.max, true);
     checkNumericRange('Family_Savings', 'Family Savings', savingsRange.min, savingsRange.max, true);
 
     setErrors(newErrors);
@@ -276,43 +331,90 @@ export default function Profile() {
 
     if(ValidateProfileData()){ //If all fields are valid
       console.log('Profile Data is Valid:', profileData);
-      //Proceed to send data to backend
       
-      //Placeholder     
-    
+      if (isGuestMode) {
+        // Save to local storage for guest
+        const success = GuestStorageManager.saveProfile(profileData);
+        if (success) {
+          alert('Profile saved locally!');
+          console.log('Guest profile saved:', profileData);
+        } else {
+          alert('Failed to save profile. Please try again.');
+        }
+      } else {
+        // Save to Firebase for authenticated user
+        try{
+          if (!currentUser) {
+            throw new Error("User not authenticated.");
+          }
+
+          const profilesCollectionRef = collection(db, 'profiles'); //Get collection reference
+          // Create new object for saving, without id property 
+          const profileDataToSave = { ...profileData };
+          delete profileDataToSave.id;
+
+          if (currentProfileId) {
+            // Update existing profile
+            const profileDocRef = doc(profilesCollectionRef, currentProfileId);
+            await updateDoc(profileDocRef, {
+              ...profileDataToSave,
+              updatedAt: Timestamp.now(),
+            });
+            alert('Profile updated successfully!');
+          } else {
+            // Create new profile
+            const newProfile ={
+              ...profileDataToSave,
+              userId: currentUser.uid,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
+            };
+            const docRef = await addDoc(profilesCollectionRef, newProfile);
+            setCurrentProfileId(docRef.id); // Store ID of the newly created profile
+            alert('Profile created successfully!');
+          }
+
+        } catch (error) {
+          console.error("Error saving profile:", error);
+          alert('Failed to save profile. Please try again.');
+        }
+      } 
     } else {
       console.log('Profile Data has errors:', errors);
       //Errors will be automatically displayed in the UI 
     }
   };
 
-  // Save profile data
-  const handleSaveProfile = () => {
-    if (isGuestMode) {
-      // Save to local storage for guest
-      const success = GuestStorageManager.saveProfile(profileData);
-      if (success) {
-        alert('Profile saved locally!');
-        console.log('Guest profile saved:', profileData);
-      } else {
-        alert('Failed to save profile. Please try again.');
-      }
-    } else {
-      // Save to Firebase for authenticated user
-      // ...your existing save logic...
-      alert('Profile saved to your account!');
-    }
-  };
-
   //Function to handle Modify and Delete buttons
-  const handleModifyButton=()=>{
+  /*const handleModifyButton=()=>{
     alert('Modify logic triggered. (Load existing profile)');
     //Placeholder
-  };
-  const handleDeleteButton=()=>{
-    if(confirm('Are you sure you want to delete your profile? (This action cannot be undone)')){
-      alert('Delete logic triggered. (Delete profile from backend)');
-      //Placeholder
+  };*/
+  const handleDeleteButton=async()=>{
+    if (isGuestMode) {
+      if(confirm('Are you sre want to clear your local profile data? (This action cannot be undone)')){
+        GuestStorageManager.clearProfile();
+        alert('Guest profile cleared from local storage.');
+        setProfileData(initialProfileData); // Reset form
+        setCurrentProfileId(null); // Clear profile ID state
+      }
+    } else {
+      if (!currentUser || !currentProfileId) {
+        alert('No profile found or user not authenticated.');
+        return;
+      }
+      if(confirm('Are you sure you want to delete your profile? (This action cannot be undone)')){
+        try {
+          const profileDocRef = doc(db, 'profiles', currentProfileId);
+          await deleteDoc(profileDocRef);
+          alert('Profile deleted successfully.');
+          setProfileData(initialProfileData); //Reset form
+          setCurrentProfileId(null);
+        } catch (error) {
+          console.error("Error deleting profile:", error);
+          alert('Failed to delete profile. Please try again.');
+        }
+      } 
     }
   };
 
@@ -371,6 +473,7 @@ export default function Profile() {
               id="Father_Gross_Monthly_Income"
               label="Father Gross Monthly Income"
               type="number"
+              step={100}
               value={profileData.Father_Gross_Monthly_Income ?? ''}
               onChange={handleChange}
               error={errors.Father_Gross_Monthly_Income}
@@ -380,6 +483,7 @@ export default function Profile() {
               id="Mother_Gross_Monthly_Income"
               label="Mother Gross Monthly Income"
               type="number"
+              step={100}
               value={profileData.Mother_Gross_Monthly_Income ?? ''}
               onChange={handleChange}
               error={errors.Mother_Gross_Monthly_Income}
@@ -389,19 +493,21 @@ export default function Profile() {
               id="Father_Disposable_Income"
               label="Monthly Disposable Income(Father)(Optional)"
               type="number"
+              step={100}
               value={profileData.Father_Disposable_Income ?? ''}
               onChange={handleChange}
               error={errors.Father_Disposable_Income}
-              placeholder="1000 - 50,000 (SGD)"
+              placeholder="0 - 50,000 (SGD)"
             />
             <FormGroup
               id="Mother_Disposable_Income"
               label="Monthly Disposable Income(Mother)(Optional) "
               type="number"
+              step={100}
               value={profileData.Mother_Disposable_Income ?? ''}
               onChange={handleChange}
               error={errors.Mother_Disposable_Income}
-              placeholder="1000 - 50,000 (SGD)"
+              placeholder="0 - 50,000 (SGD)"
             />
             <FormGroup
               id="Child_Name"
@@ -416,6 +522,7 @@ export default function Profile() {
               id="Family_Savings"
               label="Family Savings(Optional)"
               type="number"
+              step={100}
               value={profileData.Family_Savings ?? ''}
               onChange={handleChange}
               error={errors.Family_Savings}
@@ -445,8 +552,7 @@ export default function Profile() {
 
             {/* Buttons */}
             <div className="button-group">
-              <button type="submit" className="save-button" onClick={handleSaveProfile}>Save</button>
-              <button type="button" className="modify-button" onClick={handleModifyButton}>Modify</button>
+              <button type="submit" className="save-button">Save</button>
               <button type="button" className="delete-button" onClick={handleDeleteButton}>Delete</button>
             </div>
           </form>
@@ -457,7 +563,7 @@ export default function Profile() {
 }
 
 //Component for individual form group
-const FormGroup=({id, label, type, value, onChange, error, placeholder, options})=>{
+const FormGroup=({id, label, type, value, onChange, error, placeholder, options, step})=>{
   const isError=error !==null && error!==undefined;
 
   const inputElement=type==='select' ? (
@@ -480,6 +586,7 @@ const FormGroup=({id, label, type, value, onChange, error, placeholder, options}
       onChange={onChange}
       placeholder={placeholder}
       className={isError ? 'input-error' : ''}
+      step={step}
     />
   );
 
