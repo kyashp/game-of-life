@@ -10,7 +10,7 @@ export default function LifeSimPage() {
 
   const handleSimulationEnd = (data) => {
     const placeholderData = {
-      numChildren: 2,
+      numChildren: 1,
       totalExpenditure: 17500,
       totalReliefs: 4500,
       totalMiscCosts: 2500,
