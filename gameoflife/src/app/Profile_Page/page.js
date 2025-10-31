@@ -162,7 +162,7 @@ const initialProfileData={
 export default function Profile() {
   const searchParams = useSearchParams(); // to read URL query parameters
   const router = useRouter(); // to programmatically navigate
-  const [isGuestMode, setIsGuestMode] = useState(false); // State to track if in guest mode
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [currentUser, setCurrentUser] = useState(null); // State to track authenticated user
   const [userProfileLoaded, setUserProfileLoaded] = useState(false); // to track if there has been an attempt to load user profile
   const [currentProfileId, setCurrentProfileId] = useState(null);
@@ -171,59 +171,67 @@ export default function Profile() {
 
    // Check for guest mode on mount
   useEffect(() => {
-    const mode = searchParams.get('mode');
-    
-    if (mode === 'guest') {
-      setIsGuestMode(true);
-      console.log('Guest mode activated');
-      
+    const loadModeAndProfile = async() => {
       // Check if guest session exists
+      const isGuest = GuestStorageManager.isGuest();
       const guestId = GuestStorageManager.getGuestId();
-      if (!guestId) {
-        // No guest session, redirect to landing
-        alert('Guest session not found. Please try again.');
-        router.push('/Landing_Page');
-      }
-    } else {
-      // Check for authenticated user
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        const loadUserProfile = async() => {
-          if (user) {
-            setCurrentUser(user);
-            setIsGuestMode(false);
-            try{
-              const profilesCollectionRef = collection(db, 'profiles'); //Get collection reference
-              const q = query(profilesCollectionRef, where('userId', '==', user.uid));
-              const querySnapshot = await getDocs(q);
-              
-              if (!querySnapshot.empty){
-                const loadedProfileDoc = querySnapshot.docs[0]; //Assuming 1 profile per user
-                const loadedProfileData = {id: loadedProfileDoc.id, ...loadedProfileDoc.data() };
-                setProfileData(loadedProfileData);
-                setCurrentProfileId(loadedProfileDoc.id);
-                console.log('Loaded existing profile:', loadedProfileData);
-              } else {
-                setProfileData(initialProfileData);
-                setCurrentProfileId(null);
-                console.log('No existing profile found.');
-              }
-            } catch (error) {
-              console.error("Error loading user profile:", error);
-              alert('Failed to load profile. Please try again.');
-            } finally {
-              setUserProfileLoaded(true);
-            }
-          } else if (!isGuestMode) {
-            // Not logged in and not guest mode
-            router.push('/Landing_Page');
-          }
-        };
-        loadUserProfile();
-      });
+      if (isGuest && guestId) { //Valid guest session
+        setIsGuestMode(true);
+        console.log('Guest mode activated');
+        
+        const storedProfile = GuestStorageManager.getProfile();
+        if(storedProfile) {
+          setProfileData(prevData=>({...prevData, ...storedProfile}));
+          console.log('Loaded guest profile from local storage:', storedProfile);
+        } else {
+          console.log('Guest session found, but no profile data stored.');
+        }
+        setUserProfileLoaded(true);
+      } else {
+        if (isGuest || guestId){ //cleanup corrupt data if isGuest exist but no guestId vice versa
+          GuestStorageManager.clearAllData();
+        }
+        // Check for authenticated user
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          const loadUserProfile = async() => {
+            if (user) {
+              setCurrentUser(user);
 
-      return () => unsubscribe();
-    }
-  }, [searchParams, router]);
+              try{
+                const profilesCollectionRef = collection(db, 'profiles'); //Get collection reference
+                const q = query(profilesCollectionRef, where('userId', '==', user.uid));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty){
+                  const loadedProfileDoc = querySnapshot.docs[0]; //Assuming 1 profile per user
+                  const loadedProfileData = {id: loadedProfileDoc.id, ...loadedProfileDoc.data() };
+                  setProfileData(loadedProfileData);
+                  setCurrentProfileId(loadedProfileDoc.id);
+                  console.log('Loaded existing profile:', loadedProfileData);
+                } else {
+                  setProfileData(initialProfileData);
+                  setCurrentProfileId(null);
+                  console.log('No existing profile found.');
+                }
+              } catch (error) {
+                console.error("Error loading user profile:", error);
+                alert('Failed to load profile. Please try again.');
+              } finally {
+                setUserProfileLoaded(true);
+              }
+            } else {
+              // Not logged in and not guest mode
+              router.push('/Landing_Page');
+            }
+          };
+          loadUserProfile();
+        });
+
+        return () => unsubscribe();
+      }
+    };
+    loadModeAndProfile();
+  }, [router]);
 
 
   //Function to handle changes to input and update the state
