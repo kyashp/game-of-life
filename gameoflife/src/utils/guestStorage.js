@@ -104,29 +104,6 @@ export class GuestStorageManager {
   }
 
   /**
-   * Update guest profile
-   * @param {Object} updates - Fields to update
-   * @returns {boolean}
-   */
-  static updateProfile(updates) {
-    try {
-      const currentProfile = this.getProfile() || {};
-      const updatedProfile = {
-        ...currentProfile,
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem(this.KEYS.GUEST_PROFILE, JSON.stringify(updatedProfile)); // ✅ Changed
-      console.log('✅ Guest profile updated');
-      return true;
-    } catch (error) {
-      console.error('❌ Error updating guest profile:', error);
-      return false;
-    }
-  }
-
-  /**
    * Check if profile exists
    * @returns {boolean}
    */
