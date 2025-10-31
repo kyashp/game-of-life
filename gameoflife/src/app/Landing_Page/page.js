@@ -12,11 +12,12 @@ import { signUp, signIn, onAuthChange } from '@/lib/authHelpers';
 import { GuestStorageManager } from '@/utils/guestStorage';
 
 export default function Landing() {
+  // State variables
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const router = useRouter();
+  const router = useRouter(); // for navigation
 
   // Form states
   const [username, setUsername] = useState('');
@@ -133,6 +134,18 @@ export default function Landing() {
     
   };
 
+  // Handle "Start Simulating Now" button click
+  const handleStartSimulating = () => {
+    if (currentUser) {
+      router.push('/Profile_Page');
+    } else if (GuestStorageManager.isGuest()) {
+      router.push('/Profile_Page?mode=guest');
+    } else {
+      alert('Please log in or start a guest session to begin simulating.');
+    }
+  };
+
+
   return (
     <div className="flex bg-[#fefcf3]">
       {/* Left Section */}
@@ -158,12 +171,12 @@ export default function Landing() {
         </p>
 
         <div className="flex gap-4 mt-6">
-          <Link
-            href="/Profile_Page"
-            className="px-6 pt-5 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer"
+          <button
+            onClick={handleStartSimulating}
+            className="px-6 py-4 bg-[#f47068] text-white rounded-lg hover:bg-[#e55d55] transition-colors cursor-pointer "
           >
-            Start simulating now →
-          </Link>
+          Start simulating now →
+          </button>
 
           <button
             onClick={() => setIsHelpOpen(true)}
