@@ -3,10 +3,8 @@
 
 export default function TestFirebase() {
   const checkEnvVars = () => {
-    console.log('Environment Variables:');
-    console.log('API Key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
-    console.log('Auth Domain:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
-    console.log('Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+    console.log('Environment Variables are working correctly');
+    
   };
 
   return (

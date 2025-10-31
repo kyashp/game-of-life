@@ -3,11 +3,29 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Help_popup from './Help_popup';
+import { GuestStorageManager } from '@/utils/guestStorage';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function Navbar() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is guest or logged in
+  useEffect(() => {
+    const guestMode = GuestStorageManager.isGuest();
+    setIsGuest(guestMode);
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     // <div className="top-0 left-0 right-0 z-50 p-4"> 
     <>
@@ -20,22 +38,22 @@ export default function Navbar() {
               href="/Landing_Page" 
               className="hover:text-black transition-colors duration-200 text-lg"
             >
-              Login / Sign up
+              {isLoggedIn || isGuest ? 'Account' : 'Login / Sign up'}
             </Link>
             <Link 
-              href="/Profile_Page" 
+              href={isGuest ? "/Profile_Page?mode=guest" : "/Profile_Page"}
               className="hover:text-black transition-colors duration-200 text-lg"
             >
               Profile
             </Link>
             <Link 
-              href="/Life_Sim_Page" 
+              href={isGuest ? "/Life_Sim_Page?mode=guest" : "/Life_Sim_Page"}
               className="hover:text-black transition-colors duration-200 text-lg"
             >
               Life Sim 
             </Link>
             <Link 
-              href="/Insights_Page" 
+              href={isGuest ? "/Insights_Page?mode=guest" : "/Insights_Page"}
               className="hover:text-black transition-colors duration-200 text-lg"
             >
               Insights
