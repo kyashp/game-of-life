@@ -207,9 +207,6 @@ export default function Insights() {
           allowance: '#F06292',
           enrichment: '#3F51B5',
           transport: '#A1887F',
-          schoolSupplies: '#90CAF9',
-          cca: '#80CBC4',
-          textbooks: '#B39DDB',
           meals: '#FFCC80'
         };
         const defaultColor = '#9E9E9E';

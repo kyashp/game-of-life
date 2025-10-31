@@ -40,10 +40,11 @@
     -->
     <script type="module">
         // Import the new API-powered functions
+        // UPDATED: Added getPostSecondaryFees
         import {
             getChildcareFees,
             getSchoolsList,
-            getTaxBracketsFromAPI,
+            getPostSecondaryFees,
             calculateTax
         } from './data.js';
 
@@ -71,21 +72,19 @@
                     outputEl.textContent += "Could not fetch school list.\n";
                 }
 
-                // Test 3: Get Live Tax Brackets
-                outputEl.textContent += "\n--- Test 3: getTaxBracketsFromAPI() ---\n";
-                outputEl.textContent += "Fetching and parsing live tax brackets...\n";
-                const brackets = await getTaxBracketsFromAPI();
-                if (brackets.length > 0) {
-                    outputEl.textContent += `Success! Found ${brackets.length} brackets. Second bracket ($30k cap):\n`;
-                    outputEl.textContent += JSON.stringify(brackets[1], null, 2) + '\n';
-                } else {
-                    outputEl.textContent += "Could not fetch tax brackets.\n";
-                }
+                // Test 3: Get Live Polytechnic Fees
+                outputEl.textContent += "\n--- Test 3: getPostSecondaryFees() ---\n";
+                outputEl.textContent += "Fetching live polytechnic fee... (this may take a moment)\n";
+                const polyFee = await getPostSecondaryFees('polytechnic', 'citizen');
+                outputEl.textContent += `Result: Live polytechnic fee is $${polyFee}\n`;
+                outputEl.textContent += "(Expected to be around $3000)\n";
 
-                // Test 4: Calculate Tax using Live Brackets
+
+                // Test 4: Calculate Tax (This now tests the whole tax function)
                 outputEl.textContent += "\n--- Test 4: calculateTax() ---\n";
                 const income = 80000;
                 outputEl.textContent += `Calculating tax for an income of $${income.toLocaleString()}...\n`;
+                outputEl.textContent += "(This will first try the API, then use fallback)\n";
                 const tax = await calculateTax(income);
                 // Based on 2024 rates, tax on $80k is $3,350.
                 outputEl.textContent += `Result: Tax calculated is $${tax.toLocaleString()}\n`;
@@ -102,3 +101,4 @@
     </script>
 </body>
 </html>
+
