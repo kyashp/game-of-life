@@ -1,65 +1,268 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+// Import all functions from your data library
+import {
+  getChildcareFees,
+  getKindergartenFees,
+  getPrimarySchoolFees,
+  getSecondarySchoolFees,
+  getPostSecondaryFees,
+  getUniversityFees,
+  getBabyBonus,
+  getCDAMatching,
+  getQualifyingChildRelief,
+  getMiscellaneousCosts
+} from '../../lib/data.js'; // Assuming this path is correct
 
-const costBreakdownData = [
-  { stage: 'Newborn', cost: 10 },
-  { stage: 'Kindergarten', cost: 13 },
-  { stage: 'Primary School', cost: 9 },
-  { stage: 'Secondary School', cost: 15 },
-  { stage: 'JC/Poly', cost: 18 },
-  { stage: 'Adulthood', cost: 20 },
-];
+// Helper function to format currency ranges
+const formatRange = (value) => {
+  const lower = Math.round(value * 0.9); // Using a 10% range
+  const upper = Math.round(value * 1.1);
+  return `$${lower.toLocaleString()} - $${upper.toLocaleString()}`;
+};
 
-const educationCostsData = [
-  { stage: 'Childcare', cost: 8 },
-  { stage: 'Kindergarten', cost: 10 },
-  { stage: 'Primary School', cost: 7 },
-  { stage: 'Secondary School', cost: 12 },
-  { stage: 'JC/Poly', cost: 15 },
-  { stage: 'University', cost: 18 },
-];
+// Helper function to format currency
+const formatCurrency = (value) => `$${Math.round(value).toLocaleString()}`;
 
-const expenditureData = [
-  { name: 'Education', value: 55.6, color: '#FF8A80' },
-  { name: 'Medical', value: 33.3, color: '#7E57C2' },
-  { name: 'Miscellaneous', value: 11.1, color: '#FFB74D' }
-];
+// Helper to sum the values of a cost object
+const sumMiscCost = (obj) => Object.values(obj).reduce((a, b) => a + b, 0);
 
-const miscData = [
-  { name: 'Clothing', value: 35.3, color: '#FF8A80' },
-  { name: 'Enrichment', value: 35.3, color: '#7E57C2' },
-  { name: 'Allowance', value: 29.4, color: '#FFB74D' }
-];
+// Helper to capitalize strings
+const capitalize = (s) => {
+  if (typeof s !== 'string') return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
-const reliefsData = [
-  { name: 'Baby Bonus Scheme', value: 23.8, color: '#FF8A80' },
-  { name: 'Childcare Subsidy', value: 4.8, color: '#F06292' },
-  { name: 'Grandparent Caregiver Relief', value: 21.4, color: '#8E24AA' },
-  { name: 'Working Mother\'s Child Relief', value: 9.5, color: '#7E57C2' },
-  { name: 'Qualifying Child Relief', value: 19, color: '#5C6BC0' },
-  { name: 'Medisave Grants', value: 4.8, color: '#FFB74D' },
-  { name: 'Child Development Account', value: 14.3, color: '#7986CB' }
-];
 
 export default function Insights() {
   const [numChildren, setNumChildren] = useState('');
   const [educationPath, setEducationPath] = useState('');
   const [error, setError] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
+  
+  const [loading, setLoading] = useState(false);
+  const [calculations, setCalculations] = useState(null);
+  
   const dashboardRef = useRef(null);
+
+  useEffect(() => {
+    // This effect runs when the user clicks "Generate Insights"
+    if (!showDashboard || !numChildren || !educationPath) {
+      return;
+    }
+
+    const calculateInsights = async () => {
+      setLoading(true);
+      setCalculations(null);
+
+      try {
+        const numChildrenInt = parseInt(numChildren);
+        // Map dropdown value to data function key
+        const eduPathKey = educationPath === 'junior college' ? 'jc' : 'polytechnic';
+        
+        // --- ASSUMPTIONS ---
+        // As residency and realismLevel are not asked for in this form,
+        // we'll use defaults based on the component's note ("tax residents")
+        // and a standard scenario.
+        const residency = 'citizen'; 
+        const realismLevel = 'Realistic';
+
+        // --- Stage Duration Constants ---
+        const DURATION_NEWBORN = 1; // 0-1
+        const DURATION_CHILDCARE = 3; // 1-3
+        const DURATION_KINDERGARTEN = 3; // 4-6
+        const DURATION_PRIMARY = 6;
+        const DURATION_SECONDARY = 4;
+        const DURATION_POST_SEC = eduPathKey === 'jc' ? 2 : 3;
+        const DURATION_UNI = 4;
+
+        // --- Calculate Costs (per child, for the *entire* stage) ---
+
+        // 1. Education-related Fees
+        const feeChildcare = (await getChildcareFees() * 12) * DURATION_CHILDCARE;
+        const feeKindergarten = (getKindergartenFees()[residency] * 12) * DURATION_KINDERGARTEN;
+        const feePrimary = (getPrimarySchoolFees(residency) * 12) * DURATION_PRIMARY;
+        const feeSecondary = (getSecondarySchoolFees(residency) * 12) * DURATION_SECONDARY;
+        const feePostSecondary = (await getPostSecondaryFees(eduPathKey, residency)) * DURATION_POST_SEC; // This fee is annual
+        const feeUniversity = getUniversityFees(residency) * DURATION_UNI; // This fee is annual
+        
+        // 2. Miscellaneous Costs (per child, for the *entire* stage)
+        //    getMiscellaneousCosts now returns an object (breakdown)
+        const miscNebworn_breakdown = await getMiscellaneousCosts(0, realismLevel);
+        const miscChildcare_breakdown = await getMiscellaneousCosts(2, realismLevel);
+        const miscKindergarten_breakdown = await getMiscellaneousCosts(5, realismLevel);
+        const miscPrimary_breakdown = await getMiscellaneousCosts(9, realismLevel);
+        const miscSecondary_breakdown = await getMiscellaneousCosts(14, realismLevel);
+        const miscPostSecondary_breakdown = await getMiscellaneousCosts(18, realismLevel);
+        const miscUniversity_breakdown = await getMiscellaneousCosts(21, realismLevel);
+
+        // Get total misc cost per stage (per child)
+        const miscNebworn = (sumMiscCost(miscNebworn_breakdown) * 12) * DURATION_NEWBORN;
+        const miscChildcare = (sumMiscCost(miscChildcare_breakdown) * 12) * DURATION_CHILDCARE;
+        const miscKindergarten = (sumMiscCost(miscKindergarten_breakdown) * 12) * DURATION_KINDERGARTEN;
+        const miscPrimary = (sumMiscCost(miscPrimary_breakdown) * 12) * DURATION_PRIMARY;
+        const miscSecondary = (sumMiscCost(miscSecondary_breakdown) * 12) * DURATION_SECONDARY;
+        const miscPostSecondary = (sumMiscCost(miscPostSecondary_breakdown) * 12) * DURATION_POST_SEC;
+        const miscUniversity = (sumMiscCost(miscUniversity_breakdown) * 12) * DURATION_UNI;
+
+
+        // 3. Total Costs by Stage (per child)
+        const stageNewborn = miscNebworn; // Newborn has no "education" fee
+        const stageChildcare = feeChildcare + miscChildcare;
+        const stageKindergarten = feeKindergarten + miscKindergarten;
+        const stagePrimary = feePrimary + miscPrimary;
+        const stageSecondary = feeSecondary + miscSecondary;
+        const stagePostSecondary = feePostSecondary + miscPostSecondary;
+        const stageUniversity = feeUniversity + miscUniversity; // Using Uni fee for "Adulthood"
+
+        // 4. Aggregate Totals (for *all* children)
+        const totalEducationCosts = (
+          feeChildcare + feeKindergarten + feePrimary + feeSecondary + feePostSecondary + feeUniversity
+        ) * numChildrenInt;
+        
+        const totalMiscCosts = (
+          miscNebworn + miscChildcare + miscKindergarten + miscPrimary + miscSecondary + miscPostSecondary + miscUniversity
+        ) * numChildrenInt;
+
+        const totalExpenditure = totalEducationCosts + totalMiscCosts;
+
+        // 5. Calculate Benefits (for *all* children)
+        // Summing bonus/CDA for each child
+        const babyBonus = Array.from({ length: numChildrenInt }, (_, i) => getBabyBonus(i + 1)).reduce((a, b) => a + b, 0);
+        const cdaMatching = Array.from({ length: numChildrenInt }, (_, i) => getCDAMatching(i + 1)).reduce((a, b) => a + b, 0);
+        const qcr = getQualifyingChildRelief(numChildrenInt) * 25; // Estimated over 25 years
+        const totalReliefs = babyBonus + cdaMatching + qcr;
+
+        // --- Prepare Data for Charts ---
+
+        // Bar Chart: Total Cost Breakdown by Stage
+        const stageData = [
+          { stage: 'Newborn', cost: stageNewborn * numChildrenInt },
+          { stage: 'Childcare', cost: stageChildcare * numChildrenInt }, // Added Childcare
+          { stage: 'Kindergarten', cost: stageKindergarten * numChildrenInt },
+          { stage: 'Primary School', cost: stagePrimary * numChildrenInt },
+          { stage: 'Secondary School', cost: stageSecondary * numChildrenInt },
+          { stage: 'JC/Poly', cost: stagePostSecondary * numChildrenInt },
+          { stage: 'University', cost: stageUniversity * numChildrenInt }, // Renamed Adulthood
+        ];
+
+        // Bar Chart: Education Costs at each Stage
+        const educationData = [
+          { stage: 'Childcare', cost: feeChildcare * numChildrenInt },
+          { stage: 'Kindergarten', cost: feeKindergarten * numChildrenInt },
+          { stage: 'Primary School', cost: feePrimary * numChildrenInt },
+          { stage: 'Secondary School', cost: feeSecondary * numChildrenInt },
+          { stage: 'JC/Poly', cost: feePostSecondary * numChildrenInt },
+          { stage: 'University', cost: feeUniversity * numChildrenInt },
+        ];
+
+        // Pie Chart: Breakdown of Total Expenditure
+        const expenditureChartData = [
+          { name: 'Education', value: totalEducationCosts, color: '#FF8A80' },
+          { name: 'Miscellaneous', value: totalMiscCosts, color: '#FFB74D' }
+          // Note: Medical is included in Miscellaneous, so it's not broken out here
+        ];
+
+        // Pie Chart: Breakdown of Total Government Reliefs
+        const reliefsChartData = [
+          { name: 'Baby Bonus Scheme', value: babyBonus, color: '#FF8A80' },
+          { name: 'Child Development Account', value: cdaMatching, color: '#7986CB' },
+          { name: 'Qualifying Child Relief', value: qcr, color: '#5C6BC0' },
+          // Other reliefs are not calculated here as they depend on more complex inputs
+          // (e.g., income, mother's work status)
+        ];
+        
+        // Pie Chart: Breakdown of Miscellaneous Costs
+        // Aggregate all breakdowns across all stages and all children
+        const all_stage_breakdowns = [
+          { breakdown: miscNebworn_breakdown, duration: DURATION_NEWBORN },
+          { breakdown: miscChildcare_breakdown, duration: DURATION_CHILDCARE },
+          { breakdown: miscKindergarten_breakdown, duration: DURATION_KINDERGARTEN },
+          { breakdown: miscPrimary_breakdown, duration: DURATION_PRIMARY },
+          { breakdown: miscSecondary_breakdown, duration: DURATION_SECONDARY },
+          { breakdown: miscPostSecondary_breakdown, duration: DURATION_POST_SEC },
+          { breakdown: miscUniversity_breakdown, duration: DURATION_UNI }
+        ];
+
+        const aggregatedMiscBreakdown = {};
+        for (const { breakdown, duration } of all_stage_breakdowns) {
+          for (const key in breakdown) {
+            if (!aggregatedMiscBreakdown[key]) {
+              aggregatedMiscBreakdown[key] = 0;
+            }
+            // Add the monthly cost * 12 months * duration * numChildren
+            aggregatedMiscBreakdown[key] += (breakdown[key] * 12 * duration * numChildrenInt);
+          }
+        }
+
+        // Define colors for pie chart segments
+        const miscColors = {
+          clothing: '#FF8A80',
+          diapers: '#7E57C2',
+          formula: '#FFB74D',
+          medical: '#4DB6AC',
+          toys: '#FFA726',
+          allowance: '#F06292',
+          enrichment: '#3F51B5',
+          transport: '#A1887F',
+          schoolSupplies: '#90CAF9',
+          cca: '#80CBC4',
+          textbooks: '#B39DDB',
+          meals: '#FFCC80'
+        };
+        const defaultColor = '#9E9E9E';
+
+        // Format for the pie chart
+        const miscChartData = Object.keys(aggregatedMiscBreakdown)
+          .filter(key => aggregatedMiscBreakdown[key] > 0) // Only show items with cost
+          .map(key => ({
+            name: capitalize(key),
+            value: aggregatedMiscBreakdown[key],
+            color: miscColors[key] || defaultColor
+          }));
+
+
+        // --- Set State ---
+        setCalculations({
+          numChildren: numChildrenInt,
+          totalExpenditure,
+          totalReliefs,
+          totalMiscCosts,
+          totalEducationCosts,
+          stageData,
+          educationData,
+          expenditureChartData,
+          reliefsChartData,
+          miscChartData
+        });
+
+      } catch (err) {
+        console.error("Error calculating insights:", err);
+        setError('Error: Could not generate insights. Please try again.');
+        setShowDashboard(false);
+      } finally {
+        setLoading(false);
+        // Scroll to dashboard after calculations are done
+        setTimeout(() => {
+          dashboardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    };
+
+    calculateInsights();
+
+  }, [showDashboard, numChildren, educationPath]); // Re-run if these change and dashboard is shown
 
   const handleGenerateInsights = () => {
     if (!numChildren || !educationPath) {
       setError('Error: Please complete the required field');
       setShowDashboard(false);
+      setCalculations(null);
     } else {
       setError('');
-      setShowDashboard(true);
-      setTimeout(() => {
-        dashboardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      setShowDashboard(true); // This will trigger the useEffect
     }
   };
 
@@ -70,7 +273,7 @@ export default function Insights() {
 
         <div className="bg-[#FFF9C4] rounded-lg border-l-4 border-[#FFA726] w-[800px] mx-auto p-5 mb-10">
           <p className="text-lg leading-snug">
-            Note: Insights generates information based on the assumption that both parents are tax residents of Singapore
+            Note: Insights generates information based on the assumption that both parents are tax residents of Singapore (Citizens)
           </p>
         </div>
 
@@ -85,7 +288,7 @@ export default function Insights() {
                 value={numChildren}
                 onChange={(e) => setNumChildren(e.target.value)}
                 className="bg-white border-2 border-[#2D3142] rounded-full w-[200px] h-12 px-4 text-lg appearance-none 
-                           focus:outline-none focus:ring-2 focus:ring-[#6B5B95]"
+                                     focus:outline-none focus:ring-2 focus:ring-[#6B5B95]"
               >
                 <option value="" disabled>Select</option>
                 <option value="1">1</option>
@@ -103,7 +306,7 @@ export default function Insights() {
                 value={educationPath}
                 onChange={(e) => setEducationPath(e.target.value)}
                 className="bg-white border-2 border-[#2D3142] rounded-full w-[200px] h-12 px-4 text-lg appearance-none 
-                           focus:outline-none focus:ring-2 focus:ring-[#6B5B95]"
+                                     focus:outline-none focus:ring-2 focus:ring-[#6B5B95]"
               >
                 <option value="" disabled>Select</option>
                 <option value="junior college">Junior College</option>
@@ -115,86 +318,137 @@ export default function Insights() {
 
         <button
           onClick={handleGenerateInsights}
+          disabled={loading}
           className="bg-[#00C853] text-white font-bold text-xl rounded-full w-72 h-16 flex items-center justify-center mx-auto mb-4
-                     hover:bg-green-700 transition-colors duration-300 cursor-pointer"
+                       hover:bg-green-700 transition-colors duration-300 cursor-pointer disabled:bg-gray-400"
         >
-          Generate Insights <span className="ml-2">→</span>
+          {loading ? 'Generating...' : <>Generate Insights <span className="ml-2">→</span></>}
         </button>
 
         {error && <p className="text-[#E53935] text-lg mt-2">{error}</p>}
       </div>
 
+      {/* --- Dashboard Section --- */}
       {showDashboard && (
         <div ref={dashboardRef} className="max-w-[1400px] mx-auto px-10 pb-20 mt-10">
-          <h2 className="text-4xl font-bold mb-9">Insights Dashboard</h2>
+          {loading && (
+             <div className="text-center py-20">
+               <p className="text-2xl font-semibold">Generating your insights dashboard...</p>
+             </div>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-9">
-            <SummaryCard label="Number of Children" value={numChildren} />
-            <SummaryCard label="Total Expenditure" value="$10,000 - $20,000" valueColor="text-[#E53935]" />
-            <SummaryCard label="Total Government Reliefs" value="$10,000 - $20,000" valueColor="text-[#3F51B5]" />
-            <SummaryCard label="Total Miscellaneous Costs" value="$10,000 - $20,000" valueColor="text-gray-600" />
-          </div>
+          {!loading && calculations && (
+            <>
+              <h2 className="text-4xl font-bold mb-9">Insights Dashboard</h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-            <ChartCard title="Total Cost Breakdown by Stage of Growth" data={costBreakdownData} />
-            <ChartCard title="Education Costs at each Stage of Growth" data={educationCostsData} footer />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
-            <div className="flex flex-col gap-8">
-              <PieChartCard title="Breakdown of Total Expenditure" data={expenditureData} outerRadius={100} />
-              <PieChartCard title="Breakdown of Miscellaneous Costs" data={miscData} outerRadius={100} />
-            </div>
-            <div className="flex flex-col gap-8">
-              <GovernmentReliefsPieChartCard title="Breakdown of Total Government Reliefs" data={reliefsData} />
-              <ExportSection />
-            </div>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-9">
+                <SummaryCard label="Number of Children" value={calculations.numChildren} />
+                <SummaryCard label="Total Expenditure" value={formatRange(calculations.totalExpenditure)} valueColor="text-[#E53935]" />
+                <SummaryCard label="Total Government Reliefs" value={formatRange(calculations.totalReliefs)} valueColor="text-[#3F51B5]" />
+                <SummaryCard label="Total Miscellaneous Costs" value={formatRange(calculations.totalMiscCosts)} valueColor="text-gray-600" />
+              </div>
 
-          <div className="flex items-center gap-6 mt-10">
-            <div className="bg-[#FFF9C4] rounded-lg border-l-4 border-[#FFA726] p-5 inline-block">
-              <p className="text-lg text-[#00695C]">Note: For all visualisations, the median of the Cost Ranges are used.</p>
-            </div>
-          </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                <ChartCard 
+                  title="Total Cost Breakdown by Stage of Growth" 
+                  data={calculations.stageData} 
+                  dataKey="cost"
+                  tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                  tooltipFormatter={(value) => formatCurrency(value)}
+                />
+                <ChartCard 
+                  title="Education Costs at each Stage of Growth" 
+                  data={calculations.educationData} 
+                  footerText={formatRange(calculations.totalEducationCosts)}
+                  dataKey="cost"
+                  tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                  tooltipFormatter={(value) => formatCurrency(value)}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
+                <div className="flex flex-col gap-8">
+                  <PieChartCard 
+                    title="Breakdown of Total Expenditure" 
+                    data={calculations.expenditureChartData} 
+                    outerRadius={100} 
+                  />
+                  <PieChartCard 
+                    title="Breakdown of Miscellaneous Costs" 
+                    data={calculations.miscChartData} 
+                    outerRadius={100} 
+                  />
+                </div>
+                <div className="flex flex-col gap-8">
+                  <GovernmentReliefsPieChartCard 
+                    title="Breakdown of Total Government Reliefs" 
+                    data={calculations.reliefsChartData} 
+                  />
+                  <ExportSection calculations={calculations} numChildren={numChildren} educationPath={educationPath} />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 mt-10">
+                <div className="bg-[#FFF9C4] rounded-lg border-l-4 border-[#FFA726] p-5 inline-block">
+                  <p className="text-lg text-[#00695C]">Note: For all visualisations, the median of the Cost Ranges are used.</p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
   );
 }
 
+// --- Re-usable Components ---
+
 const SummaryCard = ({ label, value, valueColor }) => (
-  <div className="bg-[#E8EAF6] rounded-2xl p-6 text-center">
+  <div className="bg-[#E8EAF6] rounded-2xl p-6 text-center h-full">
     <p className="text-lg font-semibold mb-4">{label}</p>
     <p className={`text-4xl font-bold ${valueColor || 'text-[#2D3142]'}`}>{value}</p>
   </div>
 );
 
-const ChartCard = ({ title, data, footer }) => (
+const ChartCard = ({ title, data, footerText, dataKey, tickFormatter, tooltipFormatter }) => (
   <div className="bg-[#E8EAF6] rounded-2xl p-8">
     <h3 className="text-xl font-semibold text-center mb-6">{title}</h3>
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 40 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="stage" angle={-45} textAnchor="end" interval={0} height={80} />
-        <YAxis />
-        <Tooltip />
-        <Bar dataKey="cost" radius={[6, 6, 0, 0]}>
+        <YAxis tickFormatter={tickFormatter} />
+        <Tooltip formatter={tooltipFormatter} />
+        <Bar dataKey={dataKey} radius={[6, 6, 0, 0]}>
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC', '#FFA726', '#F06292'][index % 6]} />
+            <Cell key={`cell-${index}`} fill={['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC', '#FFA726', '#F06292', '#3F51B5'][index % 7]} />
           ))}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
-    {footer && (
+    {footerText && (
       <div className="text-center mt-5">
         <p className="text-lg font-semibold inline">Total Education Costs : </p>
-        <p className="text-2xl font-bold text-[#00C853] inline">$10,000 - $20,000</p>
+        <p className="text-2xl font-bold text-[#00C853] inline">{footerText}</p>
       </div>
     )}
   </div>
 );
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+// Helper to convert raw value data to percentage data for pie charts
+const getPercentageData = (data) => {
+  const total = data.reduce((acc, entry) => acc + entry.value, 0);
+  if (total === 0) return data.map(entry => ({ ...entry, value: 0, percent: 0 }));
+  
+  return data.map(entry => ({
+    ...entry,
+    value: parseFloat(((entry.value / total) * 100).toFixed(1)), // now 'value' is percentage
+    percent: (entry.value / total) // store original proportion
+  }));
+};
+
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name }) => {
   const RADIAN = Math.PI / 180;
   const radius = outerRadius + 25;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -209,14 +463,20 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
       dominantBaseline="central"
       fontSize={11}
     >
-      {`${name} ${(percent * 100).toFixed(1)}%`}
+      {`${name} ${value}%`}
     </text>
   );
 };
 
 const GovernmentReliefsPieChartCard = ({ title, data }) => {
+  const [chartData, setChartData] = useState([]);
+
+  useEffect(() => {
+    setChartData(getPercentageData(data));
+  }, [data]);
+
   const renderWrappedLabel = (props) => {
-    const { cx, cy, midAngle, outerRadius, percent, name } = props;
+    const { cx, cy, midAngle, outerRadius, value, name } = props;
     const RADIAN = Math.PI / 180;
     const radius = outerRadius + 30;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -234,7 +494,7 @@ const GovernmentReliefsPieChartCard = ({ title, data }) => {
           ))}
         </text>
         <text x={x} y={y + (words.length) * 12} fill="#2D3142" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11} fontWeight="bold">
-          {`${(percent * 100).toFixed(1)}%`}
+          {`${value}%`}
         </text>
       </g>
     );
@@ -246,16 +506,16 @@ const GovernmentReliefsPieChartCard = ({ title, data }) => {
       <ResponsiveContainer width="100%" height={400}>
         <PieChart margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             outerRadius={120}
             fill="#8884d8"
-            dataKey="value"
+            dataKey="value" // 'value' is now the percentage
             label={renderWrappedLabel}
             labelLine={{ stroke: '#888', strokeWidth: 1 }}
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
@@ -266,48 +526,106 @@ const GovernmentReliefsPieChartCard = ({ title, data }) => {
   );
 };
 
-const PieChartCard = ({ title, data, outerRadius = 120 }) => (
-  <div className="bg-[#E8EAF6] rounded-2xl p-8 h-full">
-    <h3 className="text-xl font-semibold text-center mb-6">{title}</h3>
-    <ResponsiveContainer width="100%" height={280}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          outerRadius={outerRadius}
-          fill="#8884d8"
-          dataKey="value"
-          label={renderCustomizedLabel}
-          labelLine={{ stroke: '#888', strokeWidth: 1 }}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => `${value}%`} />
-      </PieChart>
-    </ResponsiveContainer>
-  </div>
-);
+const PieChartCard = ({ title, data, outerRadius = 120 }) => {
+  const [chartData, setChartData] = useState([]);
 
-const ExportSection = () => (
-  <div className="bg-[#E8EAF6] rounded-2xl p-8 mt-[-1rem]">
-    <div className="flex items-center justify-center mb-6">
-      <h3 className="text-2xl font-semibold mr-4">Export Insights Dashboard as:</h3>
-      <select
-        className="bg-white border-2 border-[#2D3142] rounded-full w-48 h-14 px-4 text-lg appearance-none 
-                   focus:outline-none focus:ring-2 focus:ring-[#6B5B95]"
-      >
-        <option>PDF</option>
-        <option>CSV</option>
-      </select>
+  useEffect(() => {
+    // Check if data is already percentages (like miscData) or needs conversion
+    const total = data.reduce((acc, entry) => acc + entry.value, 0);
+    // Use a tolerance for floating point comparison
+    if (total === 0 || (total > 100.1 || total < 99.9)) { // It's raw data or all zeros
+      setChartData(getPercentageData(data));
+    } else { // It's already percentage data
+      setChartData(data);
+    }
+  }, [data]);
+
+  return (
+    <div className="bg-[#E8EAF6] rounded-2xl p-8 h-full">
+      <h3 className="text-xl font-semibold text-center mb-6">{title}</h3>
+      <ResponsiveContainer width="100%" height={280}>
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            outerRadius={outerRadius}
+            fill="#8884d8"
+            dataKey="value"
+            label={renderCustomizedLabel}
+            labelLine={{ stroke: '#888', strokeWidth: 1 }}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value) => `${value}%`} />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
-    <button
-      className="bg-[#FF8A80] text-white font-bold text-xl rounded-full w-60 h-16 flex items-center justify-center mx-auto mb-4
-                 hover:bg-red-500 transition-colors duration-300 cursor-pointer shadow-lg"
-    >
-      Export Insights Dashboard
-    </button>
-  </div>
-);
+  );
+};
+
+const ExportSection = ({ calculations, numChildren, educationPath }) => {
+  const [exportFormat, setExportFormat] = useState('CSV');
+
+  const handleExport = () => {
+    if (!calculations) return;
+
+    const csvContent = [
+      ['Insights Dashboard Export'],
+      [''],
+      ['Summary'],
+      ['Number of Children', numChildren],
+      ['Education Path', educationPath],
+      ['Total Expenditure', `"${formatRange(calculations.totalExpenditure)}"`],
+      ['Total Government Reliefs', `"${formatRange(calculations.totalReliefs)}"`],
+      ['Total Miscellaneous Costs', `"${formatRange(calculations.totalMiscCosts)}"`],
+      ['Total Education Costs', `"${formatRange(calculations.totalEducationCosts)}"`],
+      [''],
+      ['Cost Breakdown by Stage (Total for all children)'],
+      ['Stage', 'Cost'],
+      ...calculations.stageData.map(item => [item.stage, item.cost.toFixed(2)]),
+      [''],
+      ['Education Costs by Stage (Total for all children)'],
+      ['Stage', 'Cost'],
+      ...calculations.educationData.map(item => [item.stage, item.cost.toFixed(2)]),
+      [''],
+      ['Miscellaneous Cost Breakdown (Total for all children, all stages)'],
+      ['Category', 'Cost'],
+      ...calculations.miscChartData.map(item => [item.name, item.value.toFixed(2)]), // miscChartData now holds raw values
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `insights-dashboard-${numChildren}-children.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="bg-[#E8EAF6] rounded-2xl p-8 mt-[-1rem]">
+      <div className="flex items-center justify-center mb-6">
+        <h3 className="text-2xl font-semibold mr-4">Export Insights Dashboard as:</h3>
+        <select
+          value={exportFormat}
+          onChange={(e) => setExportFormat(e.target.value)}
+          className="bg-white border-2 border-[#2D3142] rounded-full w-48 h-14 px-4 text-lg appearance-none 
+                       focus:outline-none focus:ring-2 focus:ring-[#6B5B95]"
+        >
+          <option value="">CSV</option>
+          {/* <option value="PDF">PDF (Not implemented)</option> */}
+        </select>
+      </div>
+      <button
+        onClick={handleExport}
+        className="bg-[#FF8A80] text-white font-bold text-xl rounded-full w-60 h-16 flex items-center justify-center mx-auto mb-4
+                       hover:bg-red-500 transition-colors duration-300 cursor-pointer shadow-lg"
+      >
+        Export Insights Dashboard
+      </button>
+    </div>
+  );
+};
