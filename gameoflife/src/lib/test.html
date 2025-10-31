@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        button { font-size: 16px; padding: 10px 15px; cursor: pointer; }
+        pre {
+            background-color: #222;
+            color: #bada55;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .container { max-width: 900px; margin: auto; }
+        .test-case { margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>data.gov.sg API Test File</h1>
+        <p>This file imports functions from <code>lib/data_api.js</code> and executes them to prove they are fetching live data. Open your browser's console (F12) to see detailed logs.</p>
+        
+        <button id="runTests">Run API Tests</button>
+        
+        <div class="test-case">
+            <h3>Test Results:</h3>
+            <pre id="output">Click the button to run tests...</pre>
+        </div>
+    </div>
+
+    <!-- 
+      This script imports and uses the functions from the data_api.js file.
+      It MUST be type="module" to use import/export.
+    -->
+    <script type="module">
+        // Import the new API-powered functions
+        import {
+            getChildcareFees,
+            getSchoolsList,
+            getTaxBracketsFromAPI,
+            calculateTax
+        } from './data.js';
+
+        const runTestsBtn = document.getElementById('runTests');
+        const outputEl = document.getElementById('output');
+
+        runTestsBtn.onclick = async () => {
+            outputEl.textContent = "Running tests...\n";
+
+            try {
+                // Test 1: Get Live Childcare Fees
+                outputEl.textContent += "\n--- Test 1: getChildcareFees() ---\n";
+                outputEl.textContent += "Fetching live average childcare fee... (this may take a moment)\n";
+                const avgFee = await getChildcareFees();
+                outputEl.textContent += `Result: Live average childcare fee is $${avgFee}\n`;
+
+                // Test 2: Get Live School List
+                outputEl.textContent += "\n--- Test 2: getSchoolsList() ---\n";
+                outputEl.textContent += "Fetching first 5 schools from the list...\n";
+                const schools = await getSchoolsList();
+                if (schools.length > 0) {
+                    outputEl.textContent += `Success! Found ${schools.length} schools. First school:\n`;
+                    outputEl.textContent += JSON.stringify(schools[0], null, 2) + '\n';
+                } else {
+                    outputEl.textContent += "Could not fetch school list.\n";
+                }
+
+                // Test 3: Get Live Tax Brackets
+                outputEl.textContent += "\n--- Test 3: getTaxBracketsFromAPI() ---\n";
+                outputEl.textContent += "Fetching and parsing live tax brackets...\n";
+                const brackets = await getTaxBracketsFromAPI();
+                if (brackets.length > 0) {
+                    outputEl.textContent += `Success! Found ${brackets.length} brackets. Second bracket ($30k cap):\n`;
+                    outputEl.textContent += JSON.stringify(brackets[1], null, 2) + '\n';
+                } else {
+                    outputEl.textContent += "Could not fetch tax brackets.\n";
+                }
+
+                // Test 4: Calculate Tax using Live Brackets
+                outputEl.textContent += "\n--- Test 4: calculateTax() ---\n";
+                const income = 80000;
+                outputEl.textContent += `Calculating tax for an income of $${income.toLocaleString()}...\n`;
+                const tax = await calculateTax(income);
+                // Based on 2024 rates, tax on $80k is $3,350.
+                outputEl.textContent += `Result: Tax calculated is $${tax.toLocaleString()}\n`;
+                outputEl.textContent += "(Expected for $80k income is $3,350)\n";
+
+
+                outputEl.textContent += "\n--- All Tests Complete ---";
+
+            } catch (error) {
+                outputEl.textContent += `\n*** A TEST FAILED ***\n${error.message}\n`;
+                console.error(error);
+            }
+        };
+    </script>
+</body>
+</html>
