@@ -18,6 +18,17 @@ import {
   getWorkingMotherChildRelief, // Import tax reliefs
 } from '../lib/data.js'; // Assuming data.js is in '@/lib/data.js'
 
+// --- NEW FIREBASE IMPORTS ---
+import { auth, db } from '../lib/firebase'; // Adjust this path if needed
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  collection,
+  query,
+  where,
+  getDocs
+} from 'firebase/firestore';
+// ------------------------------
+
 // --- UI Components (Unchanged) --
 
 const Card = ({ children, style }) => (
@@ -522,19 +533,59 @@ export default function LifeSim({ onSimulationEnd }) {
   const [reliefs, setReliefs] = useState({});
   const [decisionsMade, setDecisionsMade] = useState([]); // --- NEW: Track decisions ---
 
+  // --- FIX: Replaced simple GuestStorage check with full Auth logic ---
   // 1. Load Profile on Mount
   useEffect(() => {
-    const loadedProfile = GuestStorageManager.getProfile();
-    if (loadedProfile) {
-      setProfile(loadedProfile);
-      // Set initial savings from profile
-      const initialSavings = loadedProfile.Family_Savings || 0;
-      setHouseholdSavings(initialSavings);
-    } else {
-      // Handle no profile case (e.g., redirect or show error)
-      console.error("No profile found in guest storage.");
-    }
-  }, []);
+    const loadProfile = async () => {
+      // Listen for auth state changes
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // --- USER IS LOGGED IN (FIREBASE) ---
+          console.log("User is logged in, fetching profile from Firebase...");
+          try {
+            const profilesCollectionRef = collection(db, 'profiles');
+            const q = query(profilesCollectionRef, where('userId', '==', user.uid));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+              const loadedProfileDoc = querySnapshot.docs[0];
+              const loadedProfileData = { id: loadedProfileDoc.id, ...loadedProfileDoc.data() };
+              
+              setProfile(loadedProfileData);
+              setHouseholdSavings(loadedProfileData.Family_Savings || 0);
+              console.log('Loaded Firebase profile:', loadedProfileData);
+              
+              // Also save to guest storage to sync profile page
+              GuestStorageManager.saveProfile(loadedProfileData); 
+            } else {
+              console.error("No profile found in Firebase for this user. Please visit the Profile page to create one.");
+              // You might want to alert the user or redirect them
+              alert("No profile found. Please create one on the Profile page.");
+            }
+          } catch (error) {
+            console.error("Error loading user profile from Firebase:", error);
+          }
+        } else {
+          // --- USER IS GUEST (GUEST STORAGE) ---
+          console.log("User is guest, fetching profile from guest storage...");
+          const loadedProfile = GuestStorageManager.getProfile();
+          if (loadedProfile) {
+            setProfile(loadedProfile);
+            setHouseholdSavings(loadedProfile.Family_Savings || 0);
+            console.log('Loaded guest profile:', loadedProfile);
+          } else {
+            console.error("No profile found in guest storage.");
+            // Alert or redirect user to profile page
+            alert("No profile found. Please create one on the Profile page.");
+          }
+        }
+      });
+      // Return the unsubscribe function to clean up the listener
+      return () => unsubscribe();
+    };
+    
+    loadProfile();
+  }, []); // Empty dependency array, so it runs once on mount
   
   // 1.5 Pre-fetch Poly fee to warm cache and prevent lag
   useEffect(() => {
