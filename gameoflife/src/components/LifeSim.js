@@ -16,6 +16,7 @@ import {
   getMiscellaneousCosts,
   getQualifyingChildRelief, // Import tax reliefs
   getWorkingMotherChildRelief, // Import tax reliefs
+  calculateTax, // --- NEW: Import calculateTax ---
 } from '../lib/data.js'; // Assuming data.js is in '@/lib/data.js'
 
 // --- NEW FIREBASE IMPORTS ---
@@ -404,33 +405,52 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         };
     }
     
-    // --- ANNUAL TAX RELIEF EVENT ---
+    // --- UPDATED: ANNUAL TAX RELIEF EVENT (NOW INCLUDES TAX COST) ---
     // Triggers at the end of every year
     if (ageMonths > 0 && ageMonths % 12 === 0) {
-        const qcr = getQualifyingChildRelief(1); // Assuming 1 child
+        const qcr = getQualifyingChildRelief(1); // Assuming 1st child
         const wmcr = profile.Mother_Gross_Monthly_Income > 0 ? getWorkingMotherChildRelief(1) : 0;
         const totalAnnualRelief = qcr + wmcr;
         
-        if (totalAnnualRelief > 0) {
-             let description = `You are eligible for your annual tax reliefs:
+        // **FIX: Calculate tax based on GROSS income**
+        const fatherAnnualGross = (profile.Father_Gross_Monthly_Income || 0) * 12;
+        const motherAnnualGross = (profile.Mother_Gross_Monthly_Income || 0) * 12;
+
+        // Split reliefs 50/50 for simplicity
+        const fatherTaxable = Math.max(0, fatherAnnualGross - (totalAnnualRelief / 2));
+        const motherTaxable = Math.max(0, motherAnnualGross - (totalAnnualRelief / 2));
+
+        // calculateTax is async, so we must await
+        const fatherTax = await calculateTax(fatherTaxable);
+        const motherTax = await calculateTax(motherTaxable);
+        const totalTaxPaid = fatherTax + motherTax;
+
+        let description = `It's the end of the year. Your annual tax and reliefs are calculated:
 - Qualifying Child Relief: ${formatCurrency(qcr)}`;
-             if (wmcr > 0) {
-                description += `
+        if (wmcr > 0) {
+            description += `
 - Working Mother's Child Relief: ${formatCurrency(wmcr)}`;
-             }
-            
-             return {
-                title: "Annual Tax Reliefs",
-                description: description,
-                type: "notification", category: "benefit",
-                totalBenefits: totalAnnualRelief, // Simulating relief as a direct benefit
-                totalCost: 0, requiresDecision: false,
-                benefitBreakdown: { 
-                    'Qualifying Child Relief': qcr,
-                    "Working Mother's Child Relief": wmcr 
-                }
-            };
         }
+        description += `
+
+Total Annual Tax Owed: ${formatCurrency(totalTaxPaid)}`;
+        
+        return {
+            title: "Annual Tax & Reliefs",
+            description: description,
+            type: "notification", 
+            category: "financial",
+            totalBenefits: totalAnnualRelief, // You get the reliefs
+            totalCost: totalTaxPaid, // But you pay the tax
+            requiresDecision: false,
+            benefitBreakdown: { 
+                'Qualifying Child Relief': qcr,
+                "Working Mother's Child Relief": wmcr 
+            },
+            costBreakdown: { // --- NEW: To track tax cost ---
+                'Income Tax': totalTaxPaid
+            }
+        };
     }
     
     return null;
@@ -532,6 +552,7 @@ export default function LifeSim({ onSimulationEnd }) {
   const [miscCosts, setMiscCosts] = useState({});
   const [reliefs, setReliefs] = useState({});
   const [decisionsMade, setDecisionsMade] = useState([]); // --- NEW: Track decisions ---
+  const [taxCosts, setTaxCosts] = useState(0); // --- NEW: Track tax ---
 
   // --- FIX: Replaced simple GuestStorage check with full Auth logic ---
   // 1. Load Profile on Mount
@@ -627,9 +648,10 @@ export default function LifeSim({ onSimulationEnd }) {
         miscCosts: miscCosts,
         reliefs: reliefs,
         decisionsMade: decisionsMade, // --- NEW: Pass decisions ---
+        taxCosts: taxCosts, // --- NEW: Pass tax costs ---
       });
     }
-  }, [householdSavings, totalExpenditure, totalBenefits, ageMonths, onSimulationEnd, profile, isJCStudent, stageCosts, educationCosts, medicalCosts, miscCosts, reliefs, decisionsMade]); // Added decisionsMade
+  }, [householdSavings, totalExpenditure, totalBenefits, ageMonths, onSimulationEnd, profile, isJCStudent, stageCosts, educationCosts, medicalCosts, miscCosts, reliefs, decisionsMade, taxCosts]); // Added decisionsMade & taxCosts
 
   // 3. Event Checker
   useEffect(() => {
@@ -667,7 +689,12 @@ export default function LifeSim({ onSimulationEnd }) {
       const stage = getGrowthStage(ageMonths);
       
       const newAge = ageMonths + 1;
-      const monthlyIncome = (profile.Father_Gross_Monthly_Income || 0) + (profile.Mother_Gross_Monthly_Income || 0);
+      
+      // --- FIX: Use Disposable Income if available, else Gross ---
+      const fatherIncome = profile.Father_Disposable_Income || profile.Father_Gross_Monthly_Income || 0;
+      const motherIncome = profile.Mother_Disposable_Income || profile.Mother_Gross_Monthly_Income || 0;
+      const monthlyIncome = fatherIncome + motherIncome;
+      // ------------------------------------------------------------
 
       // --- Update Totals ---
       setTotalExpenditure(prev => prev + monthlyCost);
@@ -731,8 +758,9 @@ export default function LifeSim({ onSimulationEnd }) {
       return;
     }
 
-    // --- NEW: Reset decisions on start ---
+    // --- NEW: Reset decisions & tax on start ---
     setDecisionsMade([]);
+    setTaxCosts(0);
     
     setStatus('running');
     console.log('Simulation Started');
@@ -776,9 +804,14 @@ export default function LifeSim({ onSimulationEnd }) {
       }
     }
     if (event.totalCost) {
-      // This is a one-time cost from a notification, not a decision
+      // This is a one-time cost from a notification (like tax)
       setHouseholdSavings(prev => prev - event.totalCost);
       setTotalExpenditure(prev => prev + event.totalCost);
+
+      // --- NEW: Track tax cost separately ---
+      if (event.costBreakdown && event.costBreakdown['Income Tax']) {
+        setTaxCosts(prev => prev + event.costBreakdown['Income Tax']);
+      }
     }
 
     setCurrentEvent(null); 

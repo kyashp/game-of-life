@@ -30,7 +30,7 @@ const transformPieData = (dataObject) => {
 
 // Define colors for charts
 const PIE_COLORS = {
-    expenditure: ['#FF8A80', '#7E57C2', '#FFB74D'],
+    expenditure: ['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC'], // --- NEW: Added 4th color
     misc: ['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC', '#FFA726', '#F06292', '#81C784'],
     reliefs: ['#FF8A80', '#F06292', '#8E24AA', '#7E57C2', '#5C6BC0', '#FFB74D', '#7986CB', '#4DB6AC']
 };
@@ -59,11 +59,13 @@ export default function LifeSimDashboard({ simulationData }) {
     totalEducationCosts,
     totalMiscCosts, // This is the calculated total misc cost
     totalMedicalCosts,
-    miscCosts // This is the raw miscCosts object
+    miscCosts, // This is the raw miscCosts object
+    taxCosts // --- NEW: Get taxCosts ---
   } = useMemo(() => {
     if (!simulationData) return { all: [] };
 
-    const { stageCosts, educationCosts, medicalCosts, miscCosts, reliefs } = simulationData;
+    // --- NEW: Destructure taxCosts ---
+    const { stageCosts, educationCosts, medicalCosts, miscCosts, reliefs, taxCosts } = simulationData;
 
     // 1. Bar Chart: Total Cost Breakdown
     const costBreakdownData = transformStageData(stageCosts);
@@ -76,10 +78,12 @@ export default function LifeSimDashboard({ simulationData }) {
     const totalMedicalCosts = Object.values(medicalCosts).reduce((s, v) => s + v, 0);
     const totalMiscOnly = Object.values(miscCosts).reduce((s, v) => s + v, 0);
     
+    // --- NEW: Add taxCosts to expenditure breakdown ---
     const expBreakdown = {
         'Education': totalEducationCosts,
         'Medical': totalMedicalCosts,
         'Miscellaneous': totalMiscOnly,
+        'Income Tax': taxCosts || 0,
     };
     const expenditureData = transformPieData(expBreakdown).map((item, index) => ({
       ...item,
@@ -107,7 +111,8 @@ export default function LifeSimDashboard({ simulationData }) {
         totalEducationCosts,
         totalMiscCosts: totalMiscOnly, // Use the calculated total
         totalMedicalCosts,
-        miscCosts // Pass raw object for export
+        miscCosts, // Pass raw object for export
+        taxCosts: taxCosts || 0, // --- NEW: Pass taxCosts ---
     };
   }, [simulationData]);
 
@@ -173,7 +178,8 @@ export default function LifeSimDashboard({ simulationData }) {
                 educationCostsData, 
                 miscCosts, // Pass the raw object
                 totalEducationCosts,
-                totalMiscCosts
+                totalMiscCosts,
+                taxCosts, // --- NEW: Pass tax costs ---
             }}
             decisionsMade={decisionsMade} // --- NEW: Pass decisions ---
           />
@@ -200,7 +206,12 @@ const SummaryCard = ({ label, value, valueColor }) => (
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="stage" angle={-45} textAnchor="end" interval={0} height={80} />
           <YAxis tickFormatter={(val) => formatCurrency(val)} />
-          <Tooltip formatter={(val) => formatCurrency(val)} />
+          {/* --- FIX: Added dark text style to Tooltip --- */}
+          <Tooltip 
+            labelStyle={{ color: '#2D3142' }} 
+            itemStyle={{ color: '#2D3142' }} 
+            formatter={(val) => formatCurrency(val)}
+          />
           <Bar dataKey="cost" radius={[6, 6, 0, 0]}>
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC', '#FFA726', '#F06292'][index % 6]} />
@@ -283,7 +294,12 @@ const SummaryCard = ({ label, value, valueColor }) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip formatter={(value, name, entry) => `${formatCurrency(entry.payload.absoluteValue)} (${entry.payload.value.toFixed(1)}%)`} />
+            {/* --- FIX: Added dark text style to Tooltip --- */}
+            <Tooltip 
+              labelStyle={{ color: '#2D3142' }} 
+              itemStyle={{ color: '#2D3142' }} 
+              formatter={(value, name, entry) => `${formatCurrency(entry.payload.absoluteValue)} (${entry.payload.value.toFixed(1)}%)`}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -309,7 +325,12 @@ const SummaryCard = ({ label, value, valueColor }) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip formatter={(value, name, entry) => `${formatCurrency(entry.payload.absoluteValue)} (${entry.payload.value.toFixed(1)}%)`} />
+          {/* --- FIX: Added dark text style to Tooltip --- */}
+          <Tooltip 
+            labelStyle={{ color: '#2D3142' }} 
+            itemStyle={{ color: '#2D3142' }} 
+            formatter={(value, name, entry) => `${formatCurrency(entry.payload.absoluteValue)} (${entry.payload.value.toFixed(1)}%)`}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -332,7 +353,8 @@ const ExportSection = ({ simulationData, chartData, decisionsMade }) => { // ---
             educationCostsData, 
             totalEducationCosts, 
             miscCosts, // This is the raw object
-            totalMiscCosts // This is the calculated total
+            totalMiscCosts, // This is the calculated total
+            taxCosts // --- NEW: Get tax costs ---
         } = chartData; 
 
         // Helper to format text for CSV (handles commas)
@@ -360,6 +382,7 @@ const ExportSection = ({ simulationData, chartData, decisionsMade }) => { // ---
             ['Total Government Reliefs', totalBenefits.toFixed(2)],
             ['Total Miscellaneous Costs', totalMiscCosts.toFixed(2)],
             ['Total Education Costs', totalEducationCosts.toFixed(2)],
+            ['Total Income Tax Paid', taxCosts.toFixed(2)], // --- NEW ---
             [''],
             ['Cost Breakdown by Stage'],
             ['Stage', 'Cost'],
