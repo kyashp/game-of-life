@@ -81,8 +81,8 @@ export default function Landing() {
       return;
     }
 
-    if (password.length < 6) {
-      alert('Password must be at least 6 characters!');
+    if (password.length < 12) {
+      alert('Password must be at least 12 characters!');
       setIsLoading(false);
       return;
     }

@@ -42,7 +42,7 @@ export async function signUp(email, password, username) {
     if (error.code === 'auth/email-already-in-use') {
       errorMessage = 'This email is already registered.';
     } else if (error.code === 'auth/weak-password') {
-      errorMessage = 'Password should be at least 6 characters.';
+      errorMessage = 'Password should be at least 12 characters.';
     } else if (error.code === 'auth/invalid-email') {
       errorMessage = 'Invalid email address.';
     }
