@@ -13,7 +13,10 @@ import {
     getBabyBonus,
     getCDAMatching,
     getQualifyingChildRelief,
-    getMiscellaneousCosts
+    getMiscellaneousCosts,
+    // getWorkingMotherChildRelief, // Removed
+    // getGrandparentCaregiverRelief, // Removed
+    getEdusaveContribution // Added
 } from '../../lib/data.js'; // Assuming this path is correct
 
 // Helper function to format currency ranges
@@ -77,6 +80,7 @@ export default function Insights() {
                 const DURATION_SECONDARY = 4;
                 const DURATION_POST_SEC = eduPathKey === 'jc' ? 2 : 3;
                 const DURATION_UNI = 4;
+                const DURATION_TOTAL_LIFE = DURATION_NEWBORN + DURATION_CHILDCARE + DURATION_KINDERGARTEN + DURATION_PRIMARY + DURATION_SECONDARY + DURATION_POST_SEC + DURATION_UNI; // ~25 years
 
                 // --- Calculate Costs (per child, for the *entire* stage) ---
 
@@ -129,11 +133,42 @@ export default function Insights() {
                 const totalExpenditure = totalEducationCosts + totalMiscCosts;
 
                 // 5. Calculate Benefits (for *all* children)
-                // Summing bonus/CDA for each child
-                const babyBonus = Array.from({ length: numChildrenInt }, (_, i) => getBabyBonus(i + 1)).reduce((a, b) => a + b, 0);
-                const cdaMatching = Array.from({ length: numChildrenInt }, (_, i) => getCDAMatching(i + 1)).reduce((a, b) => a + b, 0);
-                const qcr = getQualifyingChildRelief(numChildrenInt) * 25; // Estimated over 25 years
-                const totalReliefs = babyBonus + cdaMatching + qcr;
+                // --- A: Calculate Cash Grants (Baby Bonus, CDA, Edusave) ---
+                const cash_babyBonus = Array.from({ length: numChildrenInt }, (_, i) => getBabyBonus(i + 1)).reduce((a, b) => a + b, 0);
+                const cash_cdaMatching = Array.from({ length: numChildrenInt }, (_, i) => getCDAMatching(i + 1)).reduce((a, b) => a + b, 0);
+                
+                // Edusave is from age 7-16
+                const cash_edusavePrimary = getEdusaveContribution(7) * DURATION_PRIMARY; // 6 years
+                const cash_edusaveSecondary = getEdusaveContribution(13) * DURATION_SECONDARY; // 4 years
+                const cash_edusave = (cash_edusavePrimary + cash_edusaveSecondary) * numChildrenInt;
+
+                // --- B: Calculate estimated *annual* Tax Reliefs ---
+                const relief_cap_per_year = 80000;
+                
+                // QCR is per child. getQualifyingChildRelief(1) returns 4000.
+                const annual_qcr = getQualifyingChildRelief(1) * numChildrenInt;
+                
+                // --- C: Estimate *lifetime value* of tax reliefs ---
+                let total_tax_relief_value = 0;
+                const tax_relief_years = 25; // Estimate 25 years of working
+                
+                for (let year = 1; year <= tax_relief_years; year++) {
+                    let annual_reliefs = annual_qcr;
+                    
+                    // Apply the $80,000 cap
+                    const capped_annual_relief = Math.min(annual_reliefs, relief_cap_per_year);
+                    
+                    // We sum the *capped* relief amount over the estimated lifetime
+                    total_tax_relief_value += capped_annual_relief;
+                }
+
+                // --- D: Pro-rate the tax relief values for the pie chart ---
+                // Only QCR is left as a tax relief
+                const chart_qcr = total_tax_relief_value; // It's just the total capped QCR value
+
+                // --- E. Final Total Reliefs (Grants + Capped Tax Reliefs) ---
+                const totalReliefs = cash_babyBonus + cash_cdaMatching + cash_edusave + total_tax_relief_value;
+
 
                 // --- Prepare Data for Charts ---
 
@@ -165,13 +200,14 @@ export default function Insights() {
                     // Note: Medical is included in Miscellaneous, so it's not broken out here
                 ];
 
-                // Pie Chart: Breakdown of Total Government Reliefs
+                // --- NEW: Pie Chart: Breakdown of Total Government Reliefs ---
                 const reliefsChartData = [
-                    { name: 'Baby Bonus Scheme', value: babyBonus, color: '#FF8A80' },
-                    { name: 'Child Development Account', value: cdaMatching, color: '#7986CB' },
-                    { name: 'Qualifying Child Relief', value: qcr, color: '#5C6BC0' },
-                    // Other reliefs are not calculated here as they depend on more complex inputs
-                    // (e.g., income, mother's work status)
+                    { name: 'Baby Bonus Scheme', value: cash_babyBonus, color: '#FF8A80' },
+                    { name: 'Child Development Account', value: cash_cdaMatching, color: '#7986CB' },
+                    { name: 'Qualifying Child Relief', value: chart_qcr, color: '#5C6BC0' },
+                    // { name: "Working Mother's Relief", value: chart_wmcr, color: '#F06292' }, // Removed
+                    // { name: 'Grandparent Relief', value: chart_gcr, color: '#8E24AA' }, // Removed
+                    { name: 'Edusave', value: cash_edusave, color: '#4DB6AC' },
                 ];
                 
                 // Pie Chart: Breakdown of Miscellaneous Costs
@@ -482,7 +518,13 @@ const GovernmentReliefsPieChartCard = ({ title, data }) => {
     }, [data]);
 
     const renderWrappedLabel = (props) => {
-        const { cx, cy, midAngle, outerRadius, value, name } = props;
+        const { cx, cy, midAngle, outerRadius, value, name, percent } = props;
+
+        // --- UPDATED: Do not render label for very small slices ---
+        if (percent < 0.03) { // 3% threshold
+            return null;
+        }
+
         const RADIAN = Math.PI / 180;
         const radius = outerRadius + 30;
         const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -519,7 +561,7 @@ const GovernmentReliefsPieChartCard = ({ title, data }) => {
                         fill="#8884d8"
                         dataKey="value" // 'value' is now the percentage
                         label={renderWrappedLabel}
-                        labelLine={{ stroke: '#888', strokeWidth: 1 }}
+                        labelLine={false} // --- UPDATED: Set to false to hide all lines ---
                     >
                         {chartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -636,5 +678,4 @@ const ExportSection = ({ calculations, numChildren, educationPath }) => {
         </div>
     );
 };
-
 
