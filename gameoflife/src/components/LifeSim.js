@@ -212,7 +212,10 @@ const calculateMonthlyCosts = async (ageMonths, profile, isJCStudent) => {
 /**
  * Generates cost events using data.js
  */
+// --- FIX: Now returns an ARRAY of events ---
 const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
+    const events = []; // --- NEW: Event array
+
     // Helper function to get residency and income
     const getResidency = (r) => (r === 'Singaporean' ? 'citizen' : 'pr');
     const residency = getResidency(profile.Father_Residency || profile.Mother_Residency);
@@ -224,7 +227,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
     if (ageMonths === 1) {
         const bonus = getBabyBonus(1); // Assuming 1st child
         const cda = getCDAMatching(1); // Assuming 1st child
-        return {
+        events.push({
             title: "Stage: Newborn - Baby Bonus Payout",
             description: `Congratulations! You received the initial Baby Bonus cash gift (${formatCurrency(bonus)}) and the Child Development Account (CDA) First Step Grant (${formatCurrency(cda)}).`,
             type: "notification",
@@ -236,7 +239,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
                 'Baby Bonus Scheme': bonus,
                 'Child Development Account': cda
             }
-        };
+        });
     }
 
     // EVENT 2: Kindergarten Start (Age 2 / 24 months)
@@ -244,17 +247,17 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         const kFees = getKindergartenFees(); 
         const subsidy = getChildcareSubsidy(householdIncome);
         const fee = kFees[residency] || kFees.citizen;
-         return {
+         events.push({
             title: "Stage Change: Kindergarten (Ages 2-6)",
             description: `Your child is now 2 and entering the Kindergarten/Childcare stage. Based on your profile, the estimated monthly fee is ${formatCurrency(fee)} with a subsidy of ${formatCurrency(subsidy)}.`,
             type: "notification", category: "education",
             totalBenefits: 0, totalCost: 0, requiresDecision: false,
-        };
+        });
     }
 
     // EVENT 3: Enrichment Class (Age 3 / 36 months)
     if (ageMonths === 36) {
-        return {
+        events.push({
             title: "Choose an Enrichment Class",
             description: "Your child is 3! It's a popular time to start enrichment classes. This is a one-time sign-up and materials fee.",
             type: "decision", category: 'education',
@@ -265,12 +268,12 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
                 { label: "No Classes For Now", description: "Wait until they are older.", value: 'none', cost: 0 },
             ],
             requiresDecision: true,
-        };
+        });
     }
 
     // EVENT 4: Primary School Path Decision (Age 6 / 72 months)
     if (ageMonths === 72) {
-        return {
+        events.push({
             title: "Stage Change: Primary School (Ages 7-12)",
             description: "Your child is starting Primary School. Decide on the level of extra enrichment and tuition you will commit to.",
             type: "decision", category: 'education',
@@ -280,26 +283,26 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
                 { label: "Low Commitment", description: "One-time cost for basic enrichment.", value: 'low_tuition', cost: 500},
             ],
             requiresDecision: true,
-        };
+        });
     }
     
     // EVENT 5: Edusave (Age 7)
     if (ageMonths === 84) { // 7 years
         const contribution = getEdusaveContribution(7);
         if (contribution > 0) {
-             return {
+             events.push({
                 title: "Edusave Contribution",
                 description: `Your child is now 7 and has received an Edusave contribution of ${formatCurrency(contribution)}.`,
                 type: "notification", category: "education",
                 totalBenefits: contribution, totalCost: 0, requiresDecision: false,
                 benefitBreakdown: { 'Edusave': contribution }
-            };
+            });
         }
     }
 
     // EVENT 6: School Gear (Age 8 / 96 months)
     if (ageMonths === 96) {
-        return {
+        events.push({
             title: "Upgrade School Gear",
             description: "Your child needs a personal learning device for school. Choose which to get.",
             type: "decision", category: 'education',
@@ -309,7 +312,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
                 { label: "Standard Tablet", description: "Meets all school requirements.", value: 'tablet', cost: 650 },
             ],
             requiresDecision: true,
-        };
+        });
     }
 
     // EVENT 7: Secondary School Start (Age 12 / 144 months)
@@ -317,7 +320,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
     if (ageMonths === 144) { 
          const fee = getSecondarySchoolFees(residency);
          const contribution = getEdusaveContribution(13); // Get Age 13 contribution
-         return {
+         events.push({
             title: "Stage Change: Secondary School (Ages 13-16)",
             description: `Your child is now 13 and entering Secondary School. The estimated monthly fee is ${formatCurrency(fee)}. 
 They have also received an Edusave contribution of ${formatCurrency(contribution)}.`,
@@ -326,12 +329,12 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
             totalCost: 0, 
             requiresDecision: false,
             benefitBreakdown: { 'Edusave': contribution }
-        };
+        });
     }
 
     // EVENT 8: CCA Choice (Age 13 / 156 months)
     if (ageMonths === 156) {
-        return {
+        events.push({
             title: "Choose a CCA Type",
             description: "Your child is choosing their main CCA. This involves one-time fees for equipment, uniforms, or registration.",
             type: "decision", category: 'education',
@@ -342,12 +345,12 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
                 { label: "School Club", description: "E.g., Chess Club, Media. Low one-time cost.", value: 'low_cca', cost: 100 },
             ],
             requiresDecision: true,
-        };
+        });
     }
 
     // EVENT 9: School Trip (Age 15 / 180 months)
     if (ageMonths === 180) {
-        return {
+        events.push({
             title: "Overseas School Trip",
             description: "The school is organizing an optional overseas immersion trip to a regional country.",
             type: "decision", category: 'education',
@@ -357,16 +360,15 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
                 { label: "Decline Trip", description: "Save the money for other things.", value: 'no_trip', cost: 0 },
             ],
             requiresDecision: true,
-        };
+        });
     }
 
     // EVENT 10: Post-Secondary Path Decision (Age 16 / 192 months)
-    // --- FIX: This is high priority and must come before the annual tax event ---
     if (ageMonths === 192) {
          const jcFee = (await getPostSecondaryFees('jc', residency)) / 12;
          const polyFee = (await getPostSecondaryFees('poly', residency)) / 12;
         
-         return {
+         events.push({
             title: "Stage Change: Post-Secondary (Ages 17-19)",
             description: `Your child has completed Secondary School. Please decide their education path.`,
             type: "decision", category: 'education',
@@ -376,7 +378,7 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
                 { label: "Polytechnic (Poly)", description: `3 years. Est. ${formatCurrency(polyFee)}/month.`, value: false, cost: 0},
             ],
             requiresDecision: true,
-        };
+        });
     }
 
     // EVENT 11: University Start
@@ -384,17 +386,17 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
     if (ageMonths === uniStartDate) {
         const fee = getUniversityFees(residency);
         const duration = isJCStudent ? 4 : 3; // 4 years for JC path, 3 for Poly
-        return {
+        events.push({
             title: "Stage Change: University",
             description: `Your child is now entering University for ${duration} years. The estimated annual tuition fee is ${formatCurrency(fee)}.`,
             type: "notification", category: "education",
             totalBenefits: 0, totalCost: 0, requiresDecision: false,
-        };
+        });
     }
 
     // EVENT 12: Exchange Program (Age 20 / 240 months)
     if (ageMonths === 240) {
-        return {
+        events.push({
             title: "University Exchange Program",
             description: "Your child has an opportunity for a 6-month overseas exchange program. This will replace a local internship.",
             type: "decision", category: 'education',
@@ -404,7 +406,7 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
                 { label: "Local Internship", description: "Gain work experience locally.", value: 'no_exchange', cost: 0 },
             ],
             requiresDecision: true,
-        };
+        });
     }
     
     // --- FINAL EVENT: ANNUAL TAX (Lowest Priority) ---
@@ -413,7 +415,7 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
         const qcr = getQualifyingChildRelief(1); // Assuming 1st child
         const wmcr = profile.Mother_Gross_Monthly_Income > 0 ? getWorkingMotherChildRelief(1) : 0;
         
-        // Calculate tax based on GROSS income
+        // **Calculate tax based on GROSS income**
         const fatherAnnualGross = (profile.Father_Gross_Monthly_Income || 0) * 12;
         const motherAnnualGross = (profile.Mother_Gross_Monthly_Income || 0) * 12;
 
@@ -434,7 +436,7 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
         // Calculate the savings
         const totalTaxSavings = totalTaxWithoutReliefs - totalTaxPaid;
         // Re-calculate savings breakdown for display
-        const taxSavingFromQCR = (taxWithoutReliefs_Father - finalTax_Father) + (taxWithoutReliefs_Mother - await calculateTax(Math.max(0, motherAnnualGross - wmcr)));
+        const taxSavingFromQCR = (taxWithoutReliefs_Father - finalTax_Father) + (taxWithoutReliefs_Mother - (await calculateTax(Math.max(0, motherAnnualGross - wmcr))));
         const taxSavingFromWMCR = totalTaxSavings - taxSavingFromQCR;
 
         let description = `It's the end of the year. Your annual income tax is calculated:
@@ -446,15 +448,15 @@ Total Gross Annual Income: ${formatCurrency(fatherAnnualGross + motherAnnualGros
 Total Tax Owed: ${formatCurrency(totalTaxPaid)}
 (You saved ${formatCurrency(totalTaxSavings)} in taxes due to reliefs)`;
         
-        return {
+        events.push({
             title: "Annual Tax Calculation",
             description: description,
             type: "notification", 
             category: "financial",
-            totalBenefits: 0, // Tax reliefs are not cash benefits
+            totalBenefits: 0, // --- FIX: No cash benefit ---
             totalCost: totalTaxPaid, // The tax owed is the cost
             requiresDecision: false,
-            // This tracks the *tax savings* for the dashboard
+            // --- FIX: This tracks the *tax savings* for the dashboard ---
             taxReliefBreakdown: { 
                 'Qualifying Child Relief (Tax Savings)': taxSavingFromQCR,
                 "Working Mother's Child Relief (Tax Savings)": taxSavingFromWMCR 
@@ -462,10 +464,10 @@ Total Tax Owed: ${formatCurrency(totalTaxPaid)}
             costBreakdown: { // To track tax cost
                 'Income Tax': totalTaxPaid
             }
-        };
+        });
     }
     
-    return null;
+    return events; // --- NEW: Return array ---
 };
 
 
@@ -474,6 +476,7 @@ Total Tax Owed: ${formatCurrency(totalTaxPaid)}
 function CostEventModal({event, onAcknowledge, onDecision}) {
   if (!event) return null;
 
+  // --- FIX: Net impact is now correctly just the cost or benefit ---
   const netImpact = (event.totalBenefits || 0) - (event.totalCost || 0);
 
   return(
@@ -556,6 +559,9 @@ export default function LifeSim({ onSimulationEnd }) {
   const [currentEvent, setCurrentEvent] = useState(null);
   const [isJCStudent, setIsJCStudent] = useState(true); // Default to JC
   const [simulationEnded, setSimulationEnded] = useState(false);
+
+  // --- NEW: Event Queue ---
+  const [eventQueue, setEventQueue] = useState([]);
 
   // Detailed tracking for dashboard
   const [stageCosts, setStageCosts] = useState({});
@@ -667,25 +673,27 @@ export default function LifeSim({ onSimulationEnd }) {
 
   // 3. Event Checker
   useEffect(() => {
+    // --- FIX: This hook now handles the event queue ---
     if (!profile || currentEvent !== null || simulationEnded) return;
 
-    const checkForEvents = async() => {
-        // Pass isJCStudent so University event can trigger correctly
-        const event = await generateCostEvent(ageMonths, profile, isJCStudent); 
+    // If queue is empty, check for new events
+    if (eventQueue.length === 0) {
+      const checkForEvents = async() => {
+          const events = await generateCostEvent(ageMonths, profile, isJCStudent); 
 
-        if(event) {
-            setStatus('paused'); 
-            setCurrentEvent(event);
-        }
-    };
+          if(events.length > 0) {
+              setStatus('paused'); 
+              setCurrentEvent(events[0]); // Set first event
+              setEventQueue(events.slice(1)); // Put rest in queue
+          }
+      };
 
-    // Run check for all ages (age 1, 24, 72, etc.)
-    if (ageMonths > 0) { 
-       checkForEvents();
+      if (ageMonths > 0) { 
+         checkForEvents();
+      }
     }
     
-  // **FIX:** Removed `currentEvent` from the dependency array.
-  }, [ageMonths, profile, simulationEnded, isJCStudent]);
+  }, [ageMonths, profile, simulationEnded, isJCStudent, currentEvent, eventQueue]); // Now depends on currentEvent and eventQueue
 
   // 4. Simulation Loop (Main logic)
   useEffect(() => {
@@ -712,9 +720,11 @@ export default function LifeSim({ onSimulationEnd }) {
       setTotalExpenditure(prev => prev + monthlyCost);
       setHouseholdSavings(prev => {
         const newSavings = prev + monthlyIncome - monthlyCost;
+        // --- CONSOLE LOG ---
+        console.log(`Month ${ageMonths}: Savings ${prev.toFixed(0)} + Income ${monthlyIncome} - Cost ${monthlyCost.toFixed(0)} = ${newSavings.toFixed(0)}`); 
         if (newSavings <= 0) {
           clearInterval(interval);
-          // --- FIX: Pass 'true' to indicate running out of money ---
+          console.log("--- SIMULATION END: Ran out of money ---"); 
           setTimeout(() => endSimulation(true), 0); 
           return 0;
         }
@@ -752,6 +762,7 @@ export default function LifeSim({ onSimulationEnd }) {
       // --- FIX: Check against new MAX_AGE_MONTHS ---
       if (newAge >= MAX_AGE_MONTHS) {
         clearInterval(interval);
+        console.log("--- SIMULATION END: Reached 22 years ---"); 
         setTimeout(() => endSimulation(false), 0); // Pass 'false' for normal end
       }
 
@@ -773,9 +784,9 @@ export default function LifeSim({ onSimulationEnd }) {
     // --- NEW: Reset decisions & tax on start ---
     setDecisionsMade([]);
     setTaxCosts(0);
-    // --- NEW: Reset reliefs on start ---
     setReliefs({});
     setEdusave(0);
+    setEventQueue([]); // Clear event queue
     
     setStatus('running');
     console.log('Simulation Started');
@@ -795,11 +806,21 @@ export default function LifeSim({ onSimulationEnd }) {
     setSpeed(e.target.value);
   };
 
+  // --- FIX: This handler now processes the event queue ---
+  const processNextEvent = () => {
+    if (eventQueue.length > 0) {
+      setCurrentEvent(eventQueue[0]);
+      setEventQueue(eventQueue.slice(1));
+    } else {
+      setCurrentEvent(null); 
+      setStatus('running'); 
+    }
+  };
+
   const handleAcknowledge = (event) => {
-    // --- FIX: Handle benefits and costs separately ---
-    
     // 1. Handle CASH Benefits (e.g., Baby Bonus, Edusave)
     if (event.totalBenefits > 0) {
+      console.log(`--- EVENT: Acknowledging CASH Benefit: +${formatCurrency(event.totalBenefits)} for ${event.title} ---`); 
       setTotalBenefits(prev => prev + event.totalBenefits);
       setHouseholdSavings(prev => prev + event.totalBenefits);
       
@@ -822,6 +843,7 @@ export default function LifeSim({ onSimulationEnd }) {
     
     // 2. Handle Costs (e.g., Annual Tax)
     if (event.totalCost > 0) {
+      console.log(`--- EVENT: Acknowledging COST: -${formatCurrency(event.totalCost)} for ${event.title} ---`); 
       setHouseholdSavings(prev => prev - event.totalCost);
       setTotalExpenditure(prev => prev + event.totalCost);
 
@@ -831,7 +853,7 @@ export default function LifeSim({ onSimulationEnd }) {
       }
     }
     
-    // 3. --- NEW: Handle Tax *Savings* (for Dashboard) ---
+    // 3. Handle Tax *Savings* (for Dashboard)
     if (event.taxReliefBreakdown) {
       setReliefs(prev => {
             const newReliefs = { ...prev };
@@ -843,14 +865,12 @@ export default function LifeSim({ onSimulationEnd }) {
             return newReliefs;
         });
     }
-    // ----------------------------------------------------
-
-    setCurrentEvent(null); 
-    setStatus('running'); 
+    
+    processNextEvent(); // Check queue instead of setting status
   };
 
   const handleDecision = (event, chosenOption) => {
-    // --- NEW: Record the decision ---
+    // Record the decision
     const newDecision = {
       event: event.title,
       choice: chosenOption.label,
@@ -860,21 +880,19 @@ export default function LifeSim({ onSimulationEnd }) {
     // -------------------------------
 
     if (chosenOption.cost) {
-      // This is a one-time cost from a user's choice
+      console.log(`--- EVENT: Decision COST: -${formatCurrency(chosenOption.cost)} for ${chosenOption.label} ---`); 
       setHouseholdSavings(prev => prev - chosenOption.cost);
       setTotalExpenditure(prev => prev + chosenOption.cost); 
     }
     
     if (event.title.includes('Post-Secondary')) {
       setIsJCStudent(chosenOption.value);
-      console.log(`Decision made: ${chosenOption.label}`);
+      console.log(`--- EVENT: Decision made: ${chosenOption.label} ---`); 
     } else if (event.title.includes('Primary School')) {
-      console.log(`Decision made for Primary School: ${chosenOption.label}`);
+      console.log(`--- EVENT: Decision made for Primary School: ${chosenOption.label} ---`); 
     }
-    // Other decisions are just financial, no logic change needed
     
-    setCurrentEvent(null); 
-    setStatus('running'); 
+    processNextEvent(); // Check queue instead of setting status
   };
 
   const isPaused = status === 'paused';
