@@ -32,7 +32,8 @@ const transformPieData = (dataObject) => {
 const PIE_COLORS = {
     expenditure: ['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC'], // --- NEW: Added 4th color
     misc: ['#FF8A80', '#7E57C2', '#FFB74D', '#4DB6AC', '#FFA726', '#F06292', '#81C784'],
-    reliefs: ['#FF8A80', '#F06292', '#8E24AA', '#7E57C2', '#5C6BC0', '#FFB74D', '#7986CB', '#4DB6AC']
+    // --- REQ 2: Added more colors to ensure 'Tax Relieved' gets one ---
+    reliefs: ['#4DB6AC', '#FFB74D', '#7E57C2', '#FF8A80', '#F06292', '#8E24AA', '#5C6BC0', '#7986CB'],
 };
 
 const formatCurrency = (amount) => {
@@ -55,7 +56,7 @@ export default function LifeSimDashboard({ simulationData }) {
     educationCostsData,
     expenditureData,
     miscData,
-    reliefsData,
+    reliefsData, // --- REQ 2: This will now contain 'Tax Relieved' ---
     totalEducationCosts,
     totalMiscCosts, // This is the calculated total misc cost
     totalMedicalCosts,
@@ -97,6 +98,9 @@ export default function LifeSimDashboard({ simulationData }) {
     }));
     
     // 5. Pie Chart: Reliefs Breakdown
+    // --- REQ 2: The 'reliefs' object from simulationData now contains 'Tax Relieved'.
+    // This transformPieData function will automatically pick it up.
+    console.log("Dashboard: Reliefs data received:", reliefs); 
     const reliefsData = transformPieData(reliefs).map((item, index) => ({
       ...item,
       color: PIE_COLORS.reliefs[index % PIE_COLORS.reliefs.length]
@@ -166,7 +170,7 @@ export default function LifeSimDashboard({ simulationData }) {
         <div className="flex flex-col gap-8">
           <GovernmentReliefsPieChartCard 
             title="Breakdown of Total Government Reliefs" 
-            data={reliefsData} 
+            data={reliefsData} // --- REQ 2: This data now includes 'Tax Relieved' ---
           />
           
           {/* --- Export Section (FIXED) --- */}

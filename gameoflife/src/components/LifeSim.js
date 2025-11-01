@@ -110,12 +110,21 @@ const formatCurrency = (amount) => {
 // --- FIX: Updated Growth Stages (Ends at 22) ---
 const MAX_AGE_MONTHS_FINAL = 264; // 22 years * 12
 
-const getGrowthStage = (ageMonths) => {
+// --- POLY BUG FIX: This function now accepts isJCStudent ---
+const getGrowthStage = (ageMonths, isJCStudent) => {
     if (ageMonths < 24) return 'Newborn'; // 0-2Y
     if (ageMonths < 72) return 'Kindergarten'; // 2-6Y
     if (ageMonths < 144) return 'Primary School'; // 7-12Y
     if (ageMonths < 192) return 'Secondary School'; // 13-16Y
-    if (ageMonths < 216) return 'JC/Poly'; // 17-18Y (Covers 2-year JC)
+    
+    // --- POLY BUG FIX: Logic now mirrors getEducationStage ---
+    if (isJCStudent) {
+        if (ageMonths < 216) return 'JC'; // 17-18Y (24 months)
+    } else {
+        if (ageMonths < 228) return 'Polytechnic'; // 17-19Y (36 months)
+    }
+    // ---------------------------------------------------
+    
     return 'University'; // 19-22Y
 };
 
@@ -130,7 +139,7 @@ const getEducationStage = (ageMonths, isJCStudent) => {
       if (ageMonths < 216) return 'JC'; // 17-18Y
     } else {
       // Poly path is 3 years, 17-19Y
-      if (ageMonths < 228) return 'Poly'; // 17-19Y
+      if (ageMonths < 228) return 'Poly'; // 17-19Y (Months 192-227)
     }
     
     // University now starts at 18 (JC) or 19 (Poly) and ends at 22
@@ -372,8 +381,9 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
             type: "decision", category: 'education',
             totalBenefits: 0,
             options: [
-                { label: "Junior College (JC)", description: `2 years. Est. ${formatCurrency(jcFee)}/month.`, value: true, cost: 0 },
-                { label: "Polytechnic (Poly)", description: `3 years. Est. ${formatCurrency(polyFee)}/month.`, value: false, cost: 0},
+                // --- REQ 4 FIX: Changed boolean 'value' to string 'value' ---
+                { label: "Junior College (JC)", description: `2 years. Est. ${formatCurrency(jcFee)}/month.`, value: 'jc', cost: 0 },
+                { label: "Polytechnic (Poly)", description: `3 years. Est. ${formatCurrency(polyFee)}/month.`, value: 'poly', cost: 0},
             ],
             requiresDecision: true,
         };
@@ -408,8 +418,13 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
     }
     
     // --- FINAL EVENT: ANNUAL TAX (Lowest Priority) ---
-    // --- FIX: This logic is now correct ---
-    if (ageMonths > 0 && ageMonths % 12 === 0) {
+    // --- REQ 3 FIX: Changed from (ageMonths % 12 === 0) to (ageMonths % 12 === 1)
+    // This fires in the 1st month of a new year, *after* any year-end events (like age 144, 192)
+    // It also ensures it doesn't fire at age 0.
+    if (ageMonths > 0 && ageMonths % 12 === 1) {
+        const ageYears = Math.floor(ageMonths / 12);
+        console.log(`LOG: Triggering Annual Tax Event for Year ${ageYears} (AgeMonths = ${ageMonths})`);
+
         const qcr = getQualifyingChildRelief(1); // Assuming 1st child
         const wmcr = profile.Mother_Gross_Monthly_Income > 0 ? getWorkingMotherChildRelief(1) : 0;
         
@@ -433,11 +448,8 @@ They have also received an Edusave contribution of ${formatCurrency(contribution
         
         // Calculate the savings
         const totalTaxSavings = totalTaxWithoutReliefs - totalTaxPaid;
-        // Re-calculate savings breakdown for display
-        const taxSavingFromQCR = (taxWithoutReliefs_Father - finalTax_Father) + (taxWithoutReliefs_Mother - await calculateTax(Math.max(0, motherAnnualGross - wmcr)));
-        const taxSavingFromWMCR = totalTaxSavings - taxSavingFromQCR;
 
-        let description = `It's the end of the year. Your annual income tax is calculated:
+        let description = `It's the start of a new year (Age ${ageYears}). Your annual income tax from the *previous* year is calculated:
 
 Total Gross Annual Income: ${formatCurrency(fatherAnnualGross + motherAnnualGross)}
 - Tax Reliefs (QCR, WMCR): ${formatCurrency(qcr + wmcr)}
@@ -447,17 +459,17 @@ Total Tax Owed: ${formatCurrency(totalTaxPaid)}
 (You saved ${formatCurrency(totalTaxSavings)} in taxes due to reliefs)`;
         
         return {
-            title: "Annual Tax Calculation",
+            title: `Annual Tax Calculation (Year ${ageYears})`,
             description: description,
             type: "notification", 
             category: "financial",
-            totalBenefits: 0, // Tax reliefs are not cash benefits
+            totalBenefits: 0, // Tax reliefs are not cash benefits, they are savings
             totalCost: totalTaxPaid, // The tax owed is the cost
             requiresDecision: false,
             // This tracks the *tax savings* for the dashboard
             taxReliefBreakdown: { 
-                'Qualifying Child Relief (Tax Savings)': taxSavingFromQCR,
-                "Working Mother's Child Relief (Tax Savings)": taxSavingFromWMCR 
+                // --- REQ 2: This key will be used to sum savings ---
+                'totalTaxSavings': totalTaxSavings 
             },
             costBreakdown: { // To track tax cost
                 'Income Tax': totalTaxPaid
@@ -472,14 +484,33 @@ Total Tax Owed: ${formatCurrency(totalTaxPaid)}
 // --- Modal Component (Updated) ---
 
 function CostEventModal({event, onAcknowledge, onDecision}) {
+  // --- BUG FIX: Add state to prevent double-clicks ---
+  // --- RULES OF HOOKS FIX: Move Hook call to the top ---
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   if (!event) return null;
-
+  
   const netImpact = (event.totalBenefits || 0) - (event.totalCost || 0);
+  
+  // --- BUG FIX: Wrapper function for onDecision ---
+  const handleDecisionClick = (event, option) => {
+    if (isSubmitting) return; // Do nothing if already clicked
+    setIsSubmitting(true);
+    onDecision(event, option);
+  };
+  
+  // --- BUG FIX: Wrapper function for onAcknowledge ---
+  const handleAcknowledgeClick = (event) => {
+    if (isSubmitting) return; // Do nothing if already clicked
+    setIsSubmitting(true);
+    onAcknowledge(event);
+  };
 
   return(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)'
-      }} onClick={e => event.requiresDecision ? e.stopPropagation() : onAcknowledge(event)}>
+      // --- BUG FIX: Use wrapper for backdrop click ---
+      }} onClick={e => event.requiresDecision ? e.stopPropagation() : handleAcknowledgeClick(event)}>
       <div style={{
         backgroundColor: 'white', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto'
         }} onClick={e => e.stopPropagation()}>
@@ -506,8 +537,13 @@ function CostEventModal({event, onAcknowledge, onDecision}) {
                 {event.options.map((option, index) => (
                   <button
                     key={index}
-                    onClick={() => onDecision(event, option)}
-                    className="p-4 border-2 border-gray-300 rounded-x1 bg-white cursor-pointer text-left transition-all duration-200 hover:bg-indigo-50 hover:border-indigo-500 flex justify-between items-center"
+                    // --- BUG FIX: Use wrapper ---
+                    onClick={() => handleDecisionClick(event, option)}
+                    // --- BUG FIX: Add disabled prop ---
+                    disabled={isSubmitting}
+                    // --- BUG FIX: Add disabled styles ---
+                    className="p-4 border-2 border-gray-300 rounded-x1 bg-white cursor-pointer text-left transition-all duration-200 hover:bg-indigo-50 hover:border-indigo-500 flex justify-between items-center
+                               disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div>
                       {/* --- FIX: Added explicit dark color to label --- */}
@@ -525,9 +561,14 @@ function CostEventModal({event, onAcknowledge, onDecision}) {
               </div>
             ) : (
               <button
-                onClick={() => onAcknowledge(event)}
+                // --- BUG FIX: Use wrapper ---
+                onClick={() => handleAcknowledgeClick(event)}
+                // --- BUG FIX: Add disabled prop ---
+                disabled={isSubmitting}
                 style={{
-                  width: '100%', padding: '15px', background: '#00C853', color: 'white', border: 'none', borderRadius: '15px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer'
+                  width: '100%', padding: '15px', background: '#00C853', color: 'white', border: 'none', borderRadius: '15px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer',
+                  // --- BUG FIX: Add disabled style ---
+                  opacity: isSubmitting ? 0.5 : 1
                 }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#00a845'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#00C853'}
@@ -585,6 +626,8 @@ export default function LifeSim({ onSimulationEnd }) {
               const loadedProfileData = { id: loadedProfileDoc.id, ...loadedProfileDoc.data() };
               
               setProfile(loadedProfileData);
+              // --- REQ 1: Log initial savings ---
+              console.log(`SAVINGS LOG: Initial savings loaded from profile: ${formatCurrency(loadedProfileData.Family_Savings || 0)}`);
               setHouseholdSavings(loadedProfileData.Family_Savings || 0);
               console.log('Loaded Firebase profile:', loadedProfileData);
               
@@ -604,6 +647,8 @@ export default function LifeSim({ onSimulationEnd }) {
           const loadedProfile = GuestStorageManager.getProfile();
           if (loadedProfile) {
             setProfile(loadedProfile);
+            // --- REQ 1: Log initial savings ---
+            console.log(`SAVINGS LOG: Initial savings loaded from profile: ${formatCurrency(loadedProfile.Family_Savings || 0)}`);
             setHouseholdSavings(loadedProfile.Family_Savings || 0);
             console.log('Loaded guest profile:', loadedProfile);
           } else {
@@ -631,7 +676,8 @@ export default function LifeSim({ onSimulationEnd }) {
   
   const ageYears = Math.floor(ageMonths/12);
   const ageRemainingMonths = ageMonths % 12;
-  const currentStage = getGrowthStage(ageMonths);
+  // --- POLY BUG FIX: Pass isJCStudent to getGrowthStage ---
+  const currentStage = getGrowthStage(ageMonths, isJCStudent);
 
   // 2. Simulation end logic
   const endSimulation = useCallback((ranOutOfMoney = false) => { 
@@ -641,6 +687,7 @@ export default function LifeSim({ onSimulationEnd }) {
 
     // --- Alert if simulation ended due to no money ---
     if (ranOutOfMoney) {
+        // --- REQ 6: This alert is already correctly implemented ---
         alert("Simulation ended: Your household savings ran out, indicating an inability to cover the ongoing costs.");
     }
     // ----------------------------------------------------
@@ -674,12 +721,14 @@ export default function LifeSim({ onSimulationEnd }) {
         const event = await generateCostEvent(ageMonths, profile, isJCStudent); 
 
         if(event) {
+            console.log(`EVENT: Triggering '${event.title}' at ageMonth ${ageMonths}`);
             setStatus('paused'); 
             setCurrentEvent(event);
         }
     };
 
     // Run check for all ages (age 1, 24, 72, etc.)
+    // ageMonths === 0 is skipped (start of sim)
     if (ageMonths > 0) { 
        checkForEvents();
     }
@@ -698,7 +747,8 @@ export default function LifeSim({ onSimulationEnd }) {
       // Get costs from data.js
       const costs = await calculateMonthlyCosts(ageMonths, profile, isJCStudent);
       const monthlyCost = costs.total;
-      const stage = getGrowthStage(ageMonths);
+      // --- POLY BUG FIX: Pass isJCStudent to getGrowthStage ---
+      const stage = getGrowthStage(ageMonths, isJCStudent);
       
       const newAge = ageMonths + 1;
       
@@ -710,13 +760,22 @@ export default function LifeSim({ onSimulationEnd }) {
 
       // --- Update Totals ---
       setTotalExpenditure(prev => prev + monthlyCost);
+      
+      // --- REQ 1: Log monthly savings changes ---
       setHouseholdSavings(prev => {
         const newSavings = prev + monthlyIncome - monthlyCost;
+        
+        // --- REQ 6: Check for running out of money ---
         if (newSavings <= 0) {
+          console.log(`SAVINGS LOG: Ran out of money at ageMonth ${ageMonths}.`);
           clearInterval(interval);
           // --- FIX: Pass 'true' to indicate running out of money ---
           setTimeout(() => endSimulation(true), 0); 
           return 0;
+        }
+
+        if (ageMonths % 12 === 0) { // Log once a year to avoid spam
+             console.log(`SAVINGS LOG (Age ${ageMonths/12}): +${formatCurrency(monthlyIncome)} (Income) -${formatCurrency(monthlyCost)} (Costs) = ${formatCurrency(newSavings)}`);
         }
         return newSavings;
       });
@@ -801,7 +860,13 @@ export default function LifeSim({ onSimulationEnd }) {
     // 1. Handle CASH Benefits (e.g., Baby Bonus, Edusave)
     if (event.totalBenefits > 0) {
       setTotalBenefits(prev => prev + event.totalBenefits);
-      setHouseholdSavings(prev => prev + event.totalBenefits);
+      
+      // --- REQ 1: Log benefit addition ---
+      setHouseholdSavings(prev => {
+        const newSavings = prev + event.totalBenefits;
+        console.log(`SAVINGS LOG: Event '${event.title}' added ${formatCurrency(event.totalBenefits)}. New Total: ${formatCurrency(newSavings)}`);
+        return newSavings;
+      });
       
       if (event.benefitBreakdown && event.benefitBreakdown['Edusave']) {
         // --- FIX: Add to Edusave card *and* household savings ---
@@ -822,7 +887,12 @@ export default function LifeSim({ onSimulationEnd }) {
     
     // 2. Handle Costs (e.g., Annual Tax)
     if (event.totalCost > 0) {
-      setHouseholdSavings(prev => prev - event.totalCost);
+      // --- REQ 1: Log cost deduction ---
+      setHouseholdSavings(prev => {
+         const newSavings = prev - event.totalCost;
+         console.log(`SAVINGS LOG: Event '${event.title}' deducted ${formatCurrency(event.totalCost)}. New Total: ${formatCurrency(newSavings)}`);
+         return newSavings;
+      });
       setTotalExpenditure(prev => prev + event.totalCost);
 
       // Track tax cost separately
@@ -831,15 +901,14 @@ export default function LifeSim({ onSimulationEnd }) {
       }
     }
     
-    // 3. --- NEW: Handle Tax *Savings* (for Dashboard) ---
-    if (event.taxReliefBreakdown) {
+    // 3. --- REQ 2: Handle Tax *Savings* (for Dashboard) ---
+    if (event.taxReliefBreakdown && event.taxReliefBreakdown['totalTaxSavings'] > 0) {
+      const taxSavings = event.taxReliefBreakdown['totalTaxSavings'];
+      console.log(`LOG: Recording ${formatCurrency(taxSavings)} in 'Tax Relieved' for dashboard.`);
       setReliefs(prev => {
             const newReliefs = { ...prev };
-            for (const key in event.taxReliefBreakdown) {
-                if(event.taxReliefBreakdown[key] > 0) {
-                    newReliefs[key] = (newReliefs[key] || 0) + event.taxReliefBreakdown[key];
-                }
-            }
+            // Add the total savings under the new key
+            newReliefs['Tax Relieved'] = (newReliefs['Tax Relieved'] || 0) + taxSavings;
             return newReliefs;
         });
     }
@@ -860,14 +929,20 @@ export default function LifeSim({ onSimulationEnd }) {
     // -------------------------------
 
     if (chosenOption.cost) {
+      // --- REQ 1: Log decision cost ---
       // This is a one-time cost from a user's choice
-      setHouseholdSavings(prev => prev - chosenOption.cost);
+      setHouseholdSavings(prev => {
+        const newSavings = prev - chosenOption.cost;
+        console.log(`SAVINGS LOG: Decision '${event.title}' (${chosenOption.label}) deducted ${formatCurrency(chosenOption.cost)}. New Total: ${formatCurrency(newSavings)}`);
+        return newSavings;
+      });
       setTotalExpenditure(prev => prev + chosenOption.cost); 
     }
     
+    // --- REQ 4 FIX: Use string comparison ---
     if (event.title.includes('Post-Secondary')) {
-      setIsJCStudent(chosenOption.value);
-      console.log(`Decision made: ${chosenOption.label}`);
+      setIsJCStudent(chosenOption.value === 'jc');
+      console.log(`Decision made: ${chosenOption.label}. isJCStudent set to: ${chosenOption.value === 'jc'}`);
     } else if (event.title.includes('Primary School')) {
       console.log(`Decision made for Primary School: ${chosenOption.label}`);
     }
@@ -986,4 +1061,3 @@ export default function LifeSim({ onSimulationEnd }) {
     </div>
   );
 }
-

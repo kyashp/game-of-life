@@ -395,23 +395,23 @@ export function getGrandparentCaregiverRelief() {
 export async function getMiscellaneousCosts(ageYears, realismLevel) {
     // NOTE: These are estimates, not from official government sources.
     const multiplier = {
-        'Optimistic': 0.6,
+        'Optimistic': 0.8,
         'Realistic': 1.0,
-        'Conservative': 1.3
+        'Conservative': 1.5
     }[realismLevel] || 1.0;
     let baseCosts = {};
     if (ageYears < 3) {
-        baseCosts = { clothing: 150, diapers: 200, formula: 150, medical: 150, toys: 15 };
+        baseCosts = { clothing: 200, diapers: 200, formula: 150, medical: 150, toys: 15 };
     } else if (ageYears < 7) {
-        baseCosts = { clothing: 120, allowance: 50, enrichment: 200, medical: 100, transport: 50 };
+        baseCosts = { clothing: 120, allowance: 50, enrichment: 200, medical: 150, transport: 50 };
     } else if (ageYears < 13) {
         baseCosts = { clothing: 150, allowance: 100, enrichment: 300, medical: 100, transport: 50, schoolSupplies: 20, cca: 5 };
     } else if (ageYears < 17) {
         baseCosts = { clothing: 200, allowance: 200, enrichment: 400, medical: 120, transport: 100, schoolSupplies: 25, cca: 5 };
     } else if (ageYears < 20) {
-        baseCosts = { clothing: 250, allowance: 300, enrichment: 200, medical: 150, transport: 150, schoolSupplies: 25 };
+        baseCosts = { clothing: 250, allowance: 300, enrichment: 200, medical: 100, transport: 150, schoolSupplies: 25 };
     } else {
-        baseCosts = { clothing: 300, allowance: 300, medical: 100, transport: 200, textbooks: 20, meals: 300 };
+        baseCosts = { clothing: 300, allowance: 300, medical: 100, transport: 300, textbooks: 20, meals: 300 };
     }
     const finalCosts = {};
     for (const key in baseCosts) {
