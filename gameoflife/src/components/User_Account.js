@@ -73,6 +73,7 @@ export default function UserAccount({ user, isGuest = false, onExitGuest }) {
     router.push('/Landing_Page');
   };
 
+  // Cancel guest logout
   const cancelLogout = () => {
     setShowLogoutWarning(false);
   };
@@ -112,7 +113,7 @@ export default function UserAccount({ user, isGuest = false, onExitGuest }) {
 
         {/* Username */}
         <p className="text-2xl font-bold text-center text-slate-800 mb-6">
-          {isGuest ? 'Guest User' : (userData?.username || user?.displayName || 'User')}
+          {isGuest ? (userData?.username || 'Guest User') : (userData?.username || user?.displayName || 'User')}
         </p>
 
         {/* Guest Warning Banner */}
