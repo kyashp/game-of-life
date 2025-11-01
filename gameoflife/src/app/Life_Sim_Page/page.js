@@ -9,13 +9,10 @@ export default function LifeSimPage() {
   const dashboardRef = useRef(null);
 
   const handleSimulationEnd = (data) => {
-    const placeholderData = {
-      numChildren: 1,
-      totalExpenditure: 17500,
-      totalReliefs: 4500,
-      totalMiscCosts: 2500,
-    };
-    setSimulationData(placeholderData);
+    // The 'data' object now contains the complete results from the simulation
+    setSimulationData(data);
+    
+    // Scroll to the dashboard after it renders
     setTimeout(() => {
       dashboardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
@@ -23,7 +20,17 @@ export default function LifeSimPage() {
 
   return (
     <div>
-      <LifeSim onSimulationEnd={handleSimulationEnd} />
+      {/* Pass the onSimulationEnd handler to LifeSim.
+        When simulationData is null, LifeSim is visible.
+        When simulationData is set, LifeSim will be hidden by its own logic,
+        and the Dashboard will be shown below.
+      */}
+      {!simulationData && (
+        <LifeSim onSimulationEnd={handleSimulationEnd} />
+      )}
+      
+      {/* The Dashboard component is now only rendered when simulationData exists.
+      */}
       {simulationData && (
         <div ref={dashboardRef}>
           <LifeSimDashboard simulationData={simulationData} />
