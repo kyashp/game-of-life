@@ -218,9 +218,9 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
     const residency = getResidency(profile.Father_Residency || profile.Mother_Residency);
     const householdIncome = (profile.Father_Gross_Monthly_Income || 0) + (profile.Mother_Gross_Monthly_Income || 0);
 
-    // --- STAGE-BASED EVENTS ---
+    // --- STAGE-BASED EVENTS (PRIORITY ORDER) ---
 
-    // EVENT 1: Baby Bonus (Age 1 month - Serves as 'Newborn' stage event)
+    // EVENT 1: Baby Bonus (Age 1 month)
     if (ageMonths === 1) {
         const bonus = getBabyBonus(1); // Assuming 1st child
         const cda = getCDAMatching(1); // Assuming 1st child
@@ -241,7 +241,6 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
 
     // EVENT 2: Kindergarten Start (Age 2 / 24 months)
     if (ageMonths === 24) { 
-        // Use getKindergartenFees just for the pop-up text, as it's simpler
         const kFees = getKindergartenFees(); 
         const subsidy = getChildcareSubsidy(householdIncome);
         const fee = kFees[residency] || kFees.citizen;
@@ -253,7 +252,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         };
     }
 
-    // --- NEW EVENT 3: Enrichment Class (Age 3 / 36 months) ---
+    // EVENT 3: Enrichment Class (Age 3 / 36 months)
     if (ageMonths === 36) {
         return {
             title: "Choose an Enrichment Class",
@@ -275,7 +274,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
             title: "Stage Change: Primary School (Ages 7-12)",
             description: "Your child is starting Primary School. Decide on the level of extra enrichment and tuition you will commit to.",
             type: "decision", category: 'education',
-            totalBenefits: 0, // Edusave is a separate event
+            totalBenefits: 0,
             options: [
                 { label: "High Commitment", description: "One-time cost for materials and deposits.", value: 'high_tuition', cost: 2000 },
                 { label: "Low Commitment", description: "One-time cost for basic enrichment.", value: 'low_tuition', cost: 500},
@@ -284,14 +283,13 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         };
     }
     
-    // EVENT 5: Edusave (Ages 7, 13) - This is a mid-stage event
-    if (ageMonths === 84 || ageMonths === 156) { // 7 years or 13 years
-        const ageYears = Math.floor(ageMonths / 12);
-        const contribution = getEdusaveContribution(ageYears);
+    // EVENT 5: Edusave (Age 7)
+    if (ageMonths === 84) { // 7 years
+        const contribution = getEdusaveContribution(7);
         if (contribution > 0) {
              return {
                 title: "Edusave Contribution",
-                description: `Your child is now ${ageYears} and has received an Edusave contribution of ${formatCurrency(contribution)}.`,
+                description: `Your child is now 7 and has received an Edusave contribution of ${formatCurrency(contribution)}.`,
                 type: "notification", category: "education",
                 totalBenefits: contribution, totalCost: 0, requiresDecision: false,
                 benefitBreakdown: { 'Edusave': contribution }
@@ -299,7 +297,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         }
     }
 
-    // --- NEW EVENT 6: School Gear (Age 8 / 96 months) ---
+    // EVENT 6: School Gear (Age 8 / 96 months)
     if (ageMonths === 96) {
         return {
             title: "Upgrade School Gear",
@@ -315,18 +313,23 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
     }
 
     // EVENT 7: Secondary School Start (Age 12 / 144 months)
+    // --- FIX: Combined Edusave (Age 13) event here to prevent conflict ---
     if (ageMonths === 144) { 
          const fee = getSecondarySchoolFees(residency);
+         const contribution = getEdusaveContribution(13); // Get Age 13 contribution
          return {
             title: "Stage Change: Secondary School (Ages 13-16)",
-            description: `Your child is now 13 and entering Secondary School. The estimated monthly fee is ${formatCurrency(fee)}. You will receive an Edusave top-up at 13 (at 156 months).`,
+            description: `Your child is now 13 and entering Secondary School. The estimated monthly fee is ${formatCurrency(fee)}. 
+They have also received an Edusave contribution of ${formatCurrency(contribution)}.`,
             type: "notification", category: "education",
-            totalBenefits: 0, totalCost: 0, requiresDecision: false,
+            totalBenefits: contribution, // Add edusave benefit
+            totalCost: 0, 
+            requiresDecision: false,
+            benefitBreakdown: { 'Edusave': contribution }
         };
     }
 
-    // --- NEW EVENT 8: CCA Choice (Age 13 / 156 months) ---
-    // Note: This triggers *at the same time* as the Edusave top-up. The Edusave event will show first, then this one.
+    // EVENT 8: CCA Choice (Age 13 / 156 months)
     if (ageMonths === 156) {
         return {
             title: "Choose a CCA Type",
@@ -342,7 +345,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         };
     }
 
-    // --- NEW EVENT 9: School Trip (Age 15 / 180 months) ---
+    // EVENT 9: School Trip (Age 15 / 180 months)
     if (ageMonths === 180) {
         return {
             title: "Overseas School Trip",
@@ -358,8 +361,8 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
     }
 
     // EVENT 10: Post-Secondary Path Decision (Age 16 / 192 months)
+    // --- FIX: This is high priority and must come before the annual tax event ---
     if (ageMonths === 192) {
-         // --- FIX: Fetch costs for decision pop-up ---
          const jcFee = (await getPostSecondaryFees('jc', residency)) / 12;
          const polyFee = (await getPostSecondaryFees('poly', residency)) / 12;
         
@@ -377,7 +380,6 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
     }
 
     // EVENT 11: University Start
-    // Triggers at 18 (216 months) if JC, or 19 (228 months) if Poly
     const uniStartDate = isJCStudent ? 216 : 228; 
     if (ageMonths === uniStartDate) {
         const fee = getUniversityFees(residency);
@@ -390,7 +392,7 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         };
     }
 
-    // --- NEW EVENT 12: Exchange Program (Age 20 / 240 months) ---
+    // EVENT 12: Exchange Program (Age 20 / 240 months)
     if (ageMonths === 240) {
         return {
             title: "University Exchange Program",
@@ -405,49 +407,59 @@ const generateCostEvent = async (ageMonths, profile, isJCStudent) => {
         };
     }
     
-    // --- UPDATED: ANNUAL TAX RELIEF EVENT (NOW INCLUDES TAX COST) ---
-    // Triggers at the end of every year
+    // --- FINAL EVENT: ANNUAL TAX (Lowest Priority) ---
+    // --- FIX: This logic is now correct ---
     if (ageMonths > 0 && ageMonths % 12 === 0) {
         const qcr = getQualifyingChildRelief(1); // Assuming 1st child
         const wmcr = profile.Mother_Gross_Monthly_Income > 0 ? getWorkingMotherChildRelief(1) : 0;
-        const totalAnnualRelief = qcr + wmcr;
         
-        // **FIX: Calculate tax based on GROSS income**
+        // Calculate tax based on GROSS income
         const fatherAnnualGross = (profile.Father_Gross_Monthly_Income || 0) * 12;
         const motherAnnualGross = (profile.Mother_Gross_Monthly_Income || 0) * 12;
 
-        // Split reliefs 50/50 for simplicity
-        const fatherTaxable = Math.max(0, fatherAnnualGross - (totalAnnualRelief / 2));
-        const motherTaxable = Math.max(0, motherAnnualGross - (totalAnnualRelief / 2));
+        // Calculate tax *before* reliefs
+        const taxWithoutReliefs_Father = await calculateTax(fatherAnnualGross);
+        const taxWithoutReliefs_Mother = await calculateTax(motherAnnualGross);
+        const totalTaxWithoutReliefs = taxWithoutReliefs_Father + taxWithoutReliefs_Mother;
 
-        // calculateTax is async, so we must await
-        const fatherTax = await calculateTax(fatherTaxable);
-        const motherTax = await calculateTax(motherTaxable);
-        const totalTaxPaid = fatherTax + motherTax;
+        // Apply reliefs correctly
+        const fatherTaxable = Math.max(0, fatherAnnualGross - (qcr / 2));
+        const motherTaxable = Math.max(0, motherAnnualGross - (qcr / 2) - wmcr);
 
-        let description = `It's the end of the year. Your annual tax and reliefs are calculated:
-- Qualifying Child Relief: ${formatCurrency(qcr)}`;
-        if (wmcr > 0) {
-            description += `
-- Working Mother's Child Relief: ${formatCurrency(wmcr)}`;
-        }
-        description += `
+        // Calculate final tax owed
+        const finalTax_Father = await calculateTax(fatherTaxable);
+        const finalTax_Mother = await calculateTax(motherTaxable);
+        const totalTaxPaid = finalTax_Father + finalTax_Mother;
+        
+        // Calculate the savings
+        const totalTaxSavings = totalTaxWithoutReliefs - totalTaxPaid;
+        // Re-calculate savings breakdown for display
+        const taxSavingFromQCR = (taxWithoutReliefs_Father - finalTax_Father) + (taxWithoutReliefs_Mother - await calculateTax(Math.max(0, motherAnnualGross - wmcr)));
+        const taxSavingFromWMCR = totalTaxSavings - taxSavingFromQCR;
 
-Total Annual Tax Owed: ${formatCurrency(totalTaxPaid)}`;
+        let description = `It's the end of the year. Your annual income tax is calculated:
+
+Total Gross Annual Income: ${formatCurrency(fatherAnnualGross + motherAnnualGross)}
+- Tax Reliefs (QCR, WMCR): ${formatCurrency(qcr + wmcr)}
+= Final Taxable Income: ${formatCurrency(fatherTaxable + motherTaxable)}
+
+Total Tax Owed: ${formatCurrency(totalTaxPaid)}
+(You saved ${formatCurrency(totalTaxSavings)} in taxes due to reliefs)`;
         
         return {
-            title: "Annual Tax & Reliefs",
+            title: "Annual Tax Calculation",
             description: description,
             type: "notification", 
             category: "financial",
-            totalBenefits: totalAnnualRelief, // You get the reliefs
-            totalCost: totalTaxPaid, // But you pay the tax
+            totalBenefits: 0, // Tax reliefs are not cash benefits
+            totalCost: totalTaxPaid, // The tax owed is the cost
             requiresDecision: false,
-            benefitBreakdown: { 
-                'Qualifying Child Relief': qcr,
-                "Working Mother's Child Relief": wmcr 
+            // This tracks the *tax savings* for the dashboard
+            taxReliefBreakdown: { 
+                'Qualifying Child Relief (Tax Savings)': taxSavingFromQCR,
+                "Working Mother's Child Relief (Tax Savings)": taxSavingFromWMCR 
             },
-            costBreakdown: { // --- NEW: To track tax cost ---
+            costBreakdown: { // To track tax cost
                 'Income Tax': totalTaxPaid
             }
         };
@@ -761,6 +773,9 @@ export default function LifeSim({ onSimulationEnd }) {
     // --- NEW: Reset decisions & tax on start ---
     setDecisionsMade([]);
     setTaxCosts(0);
+    // --- NEW: Reset reliefs on start ---
+    setReliefs({});
+    setEdusave(0);
     
     setStatus('running');
     console.log('Simulation Started');
@@ -781,38 +796,54 @@ export default function LifeSim({ onSimulationEnd }) {
   };
 
   const handleAcknowledge = (event) => {
-    if (event.totalBenefits) {
+    // --- FIX: Handle benefits and costs separately ---
+    
+    // 1. Handle CASH Benefits (e.g., Baby Bonus, Edusave)
+    if (event.totalBenefits > 0) {
       setTotalBenefits(prev => prev + event.totalBenefits);
       setHouseholdSavings(prev => prev + event.totalBenefits);
       
       if (event.benefitBreakdown && event.benefitBreakdown['Edusave']) {
+        // --- FIX: Add to Edusave card *and* household savings ---
         setEdusave(prev => prev + event.benefitBreakdown['Edusave']);
       }
       
-      // --- NEW: Track all reliefs for the dashboard ---
+      // Track all NON-TAX reliefs for the dashboard
       if (event.benefitBreakdown) {
           setReliefs(prev => {
               const newReliefs = { ...prev };
               for (const key in event.benefitBreakdown) {
-                  // Only add if value > 0
-                  if(event.benefitBreakdown[key] > 0) {
-                     newReliefs[key] = (newReliefs[key] || 0) + event.benefitBreakdown[key];
-                  }
+                  newReliefs[key] = (newReliefs[key] || 0) + event.benefitBreakdown[key];
               }
               return newReliefs;
           });
       }
     }
-    if (event.totalCost) {
-      // This is a one-time cost from a notification (like tax)
+    
+    // 2. Handle Costs (e.g., Annual Tax)
+    if (event.totalCost > 0) {
       setHouseholdSavings(prev => prev - event.totalCost);
       setTotalExpenditure(prev => prev + event.totalCost);
 
-      // --- NEW: Track tax cost separately ---
+      // Track tax cost separately
       if (event.costBreakdown && event.costBreakdown['Income Tax']) {
         setTaxCosts(prev => prev + event.costBreakdown['Income Tax']);
       }
     }
+    
+    // 3. --- NEW: Handle Tax *Savings* (for Dashboard) ---
+    if (event.taxReliefBreakdown) {
+      setReliefs(prev => {
+            const newReliefs = { ...prev };
+            for (const key in event.taxReliefBreakdown) {
+                if(event.taxReliefBreakdown[key] > 0) {
+                    newReliefs[key] = (newReliefs[key] || 0) + event.taxReliefBreakdown[key];
+                }
+            }
+            return newReliefs;
+        });
+    }
+    // ----------------------------------------------------
 
     setCurrentEvent(null); 
     setStatus('running'); 
@@ -955,3 +986,4 @@ export default function LifeSim({ onSimulationEnd }) {
     </div>
   );
 }
+
