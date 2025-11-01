@@ -73,6 +73,7 @@ export default function UserAccount({ user, isGuest = false, onExitGuest }) {
     router.push('/Landing_Page');
   };
 
+  // Cancel guest logout
   const cancelLogout = () => {
     setShowLogoutWarning(false);
   };
@@ -112,7 +113,7 @@ export default function UserAccount({ user, isGuest = false, onExitGuest }) {
 
         {/* Username */}
         <p className="text-2xl font-bold text-center text-slate-800 mb-6">
-          {isGuest ? 'Guest User' : (userData?.username || user?.displayName || 'User')}
+          {isGuest ? (userData?.username || 'Guest User') : (userData?.username || user?.displayName || 'User')}
         </p>
 
         {/* Guest Warning Banner */}
@@ -175,9 +176,9 @@ export default function UserAccount({ user, isGuest = false, onExitGuest }) {
       </button>
     </div>
 
-    {/* Logout Warning Modal */}
+    {/* Logout Warning pop up */}
     {showLogoutWarning && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
         <div className="bg-white rounded-3xl shadow-2xl border-2 border-red-500 p-8 max-w-md mx-4">
           
           {/* Warning Icon */}
@@ -198,22 +199,13 @@ export default function UserAccount({ user, isGuest = false, onExitGuest }) {
 
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
             <p className="text-sm text-yellow-800">
-              💡 <strong>Tip:</strong> Create an account to save your progress permanently!
+             <strong>Tip:</strong> Create an account to save your progress permanently!
             </p>
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            <button
-              onClick={() => {
-                setShowLogoutWarning(false);
-                router.push('/Landing_Page');
-                
-              }}
-              className="w-full bg-green-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-green-600 transition-all"
-            >
-              Create Account Instead
-            </button>
+            
 
             <button
               onClick={confirmGuestLogout}

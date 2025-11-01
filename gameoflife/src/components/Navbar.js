@@ -38,7 +38,7 @@ export default function Navbar() {
               href="/Landing_Page" 
               className="hover:text-black transition-colors duration-200 text-lg"
             >
-              {isLoggedIn || isGuest ? 'Account' : 'Login / Sign up'}
+              { isGuest ?  'Login / Sign up' : 'Account'}
             </Link>
             <Link 
               href={isGuest ? "/Profile_Page?mode=guest" : "/Profile_Page"}

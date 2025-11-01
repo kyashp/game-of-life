@@ -140,7 +140,7 @@ export default function Landing() {
       alert('Guest session started! Your progress will be deleted when you logout.');
 
       // Redirect to Profile Page in guest mode
-      router.push('/Profile_Page?mode=guest');
+      router.push('/Landing_Page?mode=guest');
     } catch (error) {
       console.error('Guest Login error:', error);
       alert('Failed to start guest session. Please try again.');
