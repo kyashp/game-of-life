@@ -206,7 +206,7 @@ const SummaryCard = ({ label, value, valueColor }) => (
     <div className="bg-[#E8EAF6] rounded-2xl p-8">
       <h3 className="text-xl font-semibold text-center mb-6 text-[#2D3142]">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 40 }}>
+        <BarChart data={data} margin={{ top: 5, right: 20, left: 15, bottom: 40 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="stage" angle={-45} textAnchor="end" interval={0} height={80} />
           <YAxis tickFormatter={(val) => formatCurrency(val)} />

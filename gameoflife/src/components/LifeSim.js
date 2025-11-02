@@ -904,6 +904,11 @@ export default function LifeSim({ onSimulationEnd }) {
     // 3. --- REQ 2: Handle Tax *Savings* (for Dashboard) ---
     if (event.taxReliefBreakdown && event.taxReliefBreakdown['totalTaxSavings'] > 0) {
       const taxSavings = event.taxReliefBreakdown['totalTaxSavings'];
+      
+      // --- *** THIS IS THE UPDATED LINE YOU REQUESTED *** ---
+      setTotalBenefits(prev => prev + taxSavings);
+      // ----------------------------------------------------
+
       console.log(`LOG: Recording ${formatCurrency(taxSavings)} in 'Tax Relieved' for dashboard.`);
       setReliefs(prev => {
             const newReliefs = { ...prev };
