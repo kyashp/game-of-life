@@ -212,10 +212,11 @@ export default function Landing() {
           <Help_popup isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         </div>
         
+
         {/*------------------------------Comment this part out after testing -----------------------------*/}
 
         {/* Mode Indicator (Dev Only) */}
-        <div className="mt-6 p-4 bg-white rounded-lg shadow-md border-2 border-gray-200">
+        {/* <div className="mt-6 p-4 bg-white rounded-lg shadow-md border-2 border-gray-200">
           <p className="font-semibold text-gray-700 mb-2">Current Mode:</p>
           <div className="flex gap-2">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -233,10 +234,10 @@ export default function Landing() {
             }`}>
               {mode === 'user' ? '✅' : '⭕'} User
             </span>
-          </div>
+          </div> */}
 
           {/* UserId/ GuestId display*/}
-          {mode === 'guest' ? ( 
+          {/* {mode === 'guest' ? ( 
             <p className="text-xs text-gray-600 mt-2">
               Guest ID: {GuestStorageManager.getGuestId()}
             </p>
@@ -244,22 +245,22 @@ export default function Landing() {
             <p className="text-xs text-gray-600 mt-2">
               User ID: {currentUser ? currentUser.uid : 'N/A'}
             </p>
-          ) : null}
+          ) : null} */}
 
           {/* User Email Display */}
-          {currentUser && (
+          {/* {currentUser && (
             <p className="text-xs text-gray-600 mt-2">
               Email: {currentUser.email}
             </p>
-          )}
+          )} */}
 
           {/* Debug Info */}
-          <p className="text-xs text-gray-500 mt-2">
+          {/* <p className="text-xs text-gray-500 mt-2">
             authLoading: {authLoading ? 'true' : 'false'}
           </p>
-        </div>
+        </div> */}
         {/*------------------------------Comment this part out after testing -----------------------------*/}
-
+      
 
       </div>
 
