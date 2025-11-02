@@ -532,7 +532,7 @@ export default function Profile() {
             />
             <FormGroup
               id="Family_Savings"
-              label="Family Savings(Optional)"
+              label="Family Savings"
               type="number"
               step={100}
               value={profileData.Family_Savings ?? ''}

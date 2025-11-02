@@ -393,7 +393,6 @@ export function getGrandparentCaregiverRelief() {
 
 // Estimate monthly miscellaneous costs by age
 export async function getMiscellaneousCosts(ageYears, realismLevel) {
-    // NOTE: These are estimates, not from official government sources.
     const multiplier = {
         'Optimistic': 0.8,
         'Realistic': 1.0,
@@ -401,15 +400,15 @@ export async function getMiscellaneousCosts(ageYears, realismLevel) {
     }[realismLevel] || 1.0;
     let baseCosts = {};
     if (ageYears < 3) {
-        baseCosts = { clothing: 200, diapers: 200, formula: 150, medical: 150, toys: 15 };
+        baseCosts = { clothing: 200, diapers: 200, formula: 150, medical: 150, toys: 15, meals: 300 };
     } else if (ageYears < 7) {
-        baseCosts = { clothing: 120, allowance: 50, enrichment: 200, medical: 150, transport: 50 };
+        baseCosts = { clothing: 120, allowance: 50, enrichment: 200, medical: 150, transport: 50, meals: 300 };
     } else if (ageYears < 13) {
-        baseCosts = { clothing: 150, allowance: 100, enrichment: 300, medical: 100, transport: 50, schoolSupplies: 20, cca: 5 };
+        baseCosts = { clothing: 150, allowance: 100, enrichment: 300, medical: 100, transport: 50, schoolSupplies: 20, cca: 5, meals: 300 };
     } else if (ageYears < 17) {
-        baseCosts = { clothing: 200, allowance: 200, enrichment: 400, medical: 120, transport: 100, schoolSupplies: 25, cca: 5 };
+        baseCosts = { clothing: 200, allowance: 100, enrichment: 400, medical: 120, transport: 100, schoolSupplies: 25, cca: 5, meals: 300 };
     } else if (ageYears < 20) {
-        baseCosts = { clothing: 250, allowance: 300, enrichment: 200, medical: 100, transport: 150, schoolSupplies: 25 };
+        baseCosts = { clothing: 250, allowance: 300, enrichment: 200, medical: 100, transport: 150, schoolSupplies: 25, meals: 300 };
     } else {
         baseCosts = { clothing: 300, allowance: 300, medical: 100, transport: 300, textbooks: 20, meals: 300 };
     }
